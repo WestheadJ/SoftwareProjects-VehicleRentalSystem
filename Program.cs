@@ -1,4 +1,6 @@
-﻿namespace Program{
+﻿using DatabaseHandler;
+namespace Program{
+
     class Program{
         
         
@@ -34,7 +36,8 @@
         -scdl = search-car-details-license
         -scdv = search-car-details-vin
         -scdid = search-car-details-id";
-            Console.WriteLine(help);
+        Database db = new Database();
+        db.Login();
         }
     }
 }
