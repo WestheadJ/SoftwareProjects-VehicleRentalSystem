@@ -21,8 +21,8 @@ namespace DatabaseHandler{
             return true;
         }
 
-        public bool Register(){
-            return false;
+        public void Register(){
+            
         }
 
     }

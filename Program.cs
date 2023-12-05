@@ -1,13 +1,13 @@
-﻿using System.Data.Common;
-using System.Security.Cryptography.X509Certificates;
-using DatabaseHandler;
-using SQLitePCL;
-namespace Program{
+﻿using DatabaseHandler;
+namespace Program
+{
 
-    class Program{
-        
-        
-        public static void Main(string[] args){
+    class Program
+    {
+
+
+        public static void Main(string[] args)
+        {
             string help = @"HELP MENU:
     Args Formatting:
         vrs command | args 
@@ -41,44 +41,134 @@ namespace Program{
         -scdl = search-car-details-license
         -scdv = search-car-details-vin
         -scdid = search-car-details-id";
-            try{
+            try
+            {
                 Database DB = new Database();
 
-                if(args.Length == 0){
+                if (args.Length == 0)
+                {
                     Console.WriteLine("No arguments given!");
                     Help(help);
                 }
-                else{
-                    if(args[0] == "help" || args[0] == "-h"){
+                else
+                {
+                    if (args[0] == "help" || args[0] == "-h")
+                    {
                         Help(help);
                     }
-                    else if(args[0] == "login" || args[0] == "-l"){
-                        Login(DB,Convert.ToInt32(args[1]),args[2]);
+                    else if (args[0] == "login" || args[0] == "-l")
+                    {
+                        Login(DB, Convert.ToInt32(args[1]), args[2]);
                     }
                 }
             }
-            catch(Exception err){
+            catch (Exception err)
+            {
                 Console.WriteLine(err);
-                
-            }   
 
-            void Login(Database DB,int staff_id, string password){
-                if(DB.Login(staff_id,password)){
+            }
+
+            void Login(Database DB, int staff_id, string password)
+            {
+                if (DB.Login(staff_id, password))
+                {
                     Console.WriteLine("Logged In!");
-                    // while(true){
-
-                    // }
+                    Menu(new Dictionary<string, string> { { "1", "Register" }, { "2", "Help" } },
+                    new List<Action> { new Action(() => { Help(help); }), new Action(() => { Help(help); }) });
                 }
-                else{
+                else
+                {
                     Console.WriteLine("Could not login, details are incorrect!");
                 }
 
             }
 
-            void Help(string help){
-            Console.WriteLine(help);
+            void Help(string help)
+            {
+                Console.WriteLine(help);
+            }
+
+            void Menu(Dictionary<string, string> options, List<Action> actions)
+            {
+                int position = 0;
+                MenuWrite(options,position);
+                while (true)
+                {
+                    var key = Console.ReadKey();
+                    if (key.KeyChar == 'q') { break; }
+                    else if (key.Key == ConsoleKey.UpArrow)
+                    {
+                        if (position == 0)
+                        {
+                            position = options.Count-1;
+                        }
+                        else { position--; }
+                                            Console.Clear();
+
+
+                    }
+                    else if(key.Key == ConsoleKey.DownArrow){
+                        if(position == options.Count-1){
+                            position = 0;
+                        }
+                        else{position ++;}
+                                            Console.Clear();
+
+                    }
+                    else if(key.Key == ConsoleKey.Enter){
+                        actions[position]();
+                    }
+                    MenuWrite(options,position);
+                }
+
+                // for (int count = 0; count < options.Count(); count++)
+                // {
+                //     if (count == position)
+                //     {
+                //         Console.ForegroundColor = ConsoleColor.Black;
+                //         Console.BackgroundColor = ConsoleColor.White;
+
+                //         Console.Write(count + 1 + ". " + options[(count + 1).ToString()]);
+                //         Console.ResetColor();
+                //         Console.Write("\n");
+                //     }
+                //     else
+                //     {
+                //         Console.WriteLine(count + 1 + ". " + options[(count + 1).ToString()]);
+                //     }
+
+
+                // }
+
+                // foreach(var i in options){
+                //     Console.WriteLine(i.Key + ", "+ i.Value);
+                // }
+
+                // foreach(Action action in actions){
+                //     action();
+                // }
+                void MenuWrite(Dictionary<string, string> options,int position)
+                {
+                    for (int count = 0; count < options.Count(); count++)
+                    {
+                        if (count == position)
+                        {
+                            Console.ForegroundColor = ConsoleColor.Black;
+                            Console.BackgroundColor = ConsoleColor.White;
+
+                            Console.WriteLine(count + 1 + ". " + options[(count + 1).ToString()]);
+                            Console.ResetColor();
+                        }
+                        else
+                        {
+                            Console.WriteLine(count + 1 + ". " + options[(count + 1).ToString()]);
+                            Console.ResetColor();
+                        }
+                    }
+                }
+
+            }
         }
-    }     
-        }
-        
+    }
+
 }
