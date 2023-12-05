@@ -71,7 +71,7 @@ namespace Program
                         Register(DB,Convert.ToInt32(args[1]),args[2]);
                     } 
                     else if(args[0] == "-r"){
-                        
+                        RegisterShorthand(DB,Convert.ToInt32(args[1]),args[2]);
                     }
                 }
             }
@@ -103,7 +103,31 @@ namespace Program
             }
 
             void Register(Database DB, int staff_id ,string staff_password){
-                
+                Console.WriteLine("Registering a new member of staff, make sure the new member of staff fills this out:");
+                Console.WriteLine("Enter new staff members' forename: ");
+                string new_staff_forename = Console.ReadLine();
+                Console.WriteLine("Enter new staff members' surname: ");
+                string new_staff_surname = Console.ReadLine();
+                Console.WriteLine("Enter new staff members' email: ");
+                string new_staff_email = Console.ReadLine();
+                Console.WriteLine("Enter new staff members' phone number: ");
+                int new_staff_phone_number = Convert.ToInt32(Console.ReadLine());
+                Console.WriteLine("Enter new staff members' password: ");
+                string new_staff_password = Console.ReadLine();
+                int is_admin = 0;
+                while(true){
+                    Console.WriteLine("Is new member an admin (answer yes or no): ");
+                    string answer = Console.ReadLine();
+                    if(answer == "yes"){
+                        is_admin = 1;
+                        break;
+                    }
+                    break;
+                }
+
+            
+
+
             }
 
             void RegisterShorthand(Database DB,int staff_id,string staff_password){
