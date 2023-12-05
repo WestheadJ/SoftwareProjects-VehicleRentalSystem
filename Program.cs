@@ -1,4 +1,7 @@
-﻿using DatabaseHandler;
+﻿using System.Data.Common;
+using System.Security.Cryptography.X509Certificates;
+using DatabaseHandler;
+using SQLitePCL;
 namespace Program{
 
     class Program{
@@ -10,6 +13,8 @@ namespace Program{
         vrs command | args 
 
     Commands:
+        -help, help commands
+        -version, version
         login | staff_id, staff_password = Used for logging in, used by any member of staff.
         register | staff_forename, staff_surname, staff_email, staff_phone_number, is_admin, staff_id = Used for registering, can only be used by an admin.
         rent-car-new | staff_id, staff_password, car_id, customer_forename, customer_surname, customer_email, customer_phone_number, start_date, end_date = Rent a car with a new customer, used by any member of staff.
@@ -23,8 +28,8 @@ namespace Program{
         search-car-detail-id  | staff_id, staff_password, car_id
         
     Shorthands:
-        -help = help commands
-        -version = version
+        -h = help 
+        -v = version
         -l = login
         -r = register
         -rcn = rent-car-new
@@ -36,9 +41,44 @@ namespace Program{
         -scdl = search-car-details-license
         -scdv = search-car-details-vin
         -scdid = search-car-details-id";
-        Database db = new Database();
-        db.Login();
-        
+            try{
+                Database DB = new Database();
+
+                if(args.Length == 0){
+                    Console.WriteLine("No arguments given!");
+                    Help(help);
+                }
+                else{
+                    if(args[0] == "help" || args[0] == "-h"){
+                        Help(help);
+                    }
+                    else if(args[0] == "login" || args[0] == "-l"){
+                        Login(DB,Convert.ToInt32(args[1]),args[2]);
+                    }
+                }
+            }
+            catch(Exception err){
+                Console.WriteLine(err);
+                
+            }   
+
+            void Login(Database DB,int staff_id, string password){
+                if(DB.Login(staff_id,password)){
+                    Console.WriteLine("Logged In!");
+                    // while(true){
+
+                    // }
+                }
+                else{
+                    Console.WriteLine("Could not login, details are incorrect!");
+                }
+
+            }
+
+            void Help(string help){
+            Console.WriteLine(help);
         }
-    }
+    }     
+        }
+        
 }
