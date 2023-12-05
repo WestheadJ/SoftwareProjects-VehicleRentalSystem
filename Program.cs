@@ -47,6 +47,7 @@ namespace Program
         -ac = add-car
         -rc = remove-car
         -rs = remove-staff";
+        
             try
             {
                 Database DB = new Database();
@@ -66,6 +67,12 @@ namespace Program
                     {
                         Login(DB, Convert.ToInt32(args[1]), args[2]);
                     }
+                    else if(args[0] == "register"){
+                        Register(DB,Convert.ToInt32(args[1]),args[2]);
+                    } 
+                    else if(args[0] == "-r"){
+                        
+                    }
                 }
             }
             catch (Exception err)
@@ -74,9 +81,9 @@ namespace Program
 
             }
 
-            void Login(Database DB, int staff_id, string password)
+            void Login(Database DB, int staff_id, string staff_password)
             {
-                if (DB.Login(staff_id, password))
+                if (DB.Login(staff_id, staff_password))
                 {
                     Console.WriteLine("Logged In!");
                     Menu(new Dictionary<string, string> { 
@@ -84,7 +91,7 @@ namespace Program
                         { "2", "Help list" } 
                     },
                     new List<Action> { 
-                        new Action(() => { DB.Register(); }), 
+                        new Action(() => { Register(DB,staff_id,staff_password); }), 
                         new Action(() => { Help(help); }) 
                     });
                 }
@@ -92,6 +99,14 @@ namespace Program
                 {
                     Console.WriteLine("Could not login, details are incorrect!");
                 }
+
+            }
+
+            void Register(Database DB, int staff_id ,string staff_password){
+                
+            }
+
+            void RegisterShorthand(Database DB,int staff_id,string staff_password){
 
             }
 
