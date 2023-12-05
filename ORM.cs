@@ -1,5 +1,5 @@
 namespace ORM{
-    public class Car{
+    class Car{
         private int car_id;
         public int Card_ID{get{return car_id;}set{car_id=value;}}
         private string car_make;
@@ -20,5 +20,18 @@ namespace ORM{
         }
     }
 
+    class Staff {
+        private int staff_id;
+        public int Staff_ID{get{return staff_id;}set{staff_id=value;}}
+        private string staff_forename;
+        public string Staff_Forename{get{return staff_forename;}set{staff_forename=value;}}
+        private string staff_surname;
+        public string Staff_Surname{get{return staff_surname;}set{staff_surname=value;}}
+        public Staff(int staff_id,string staff_forename,string staff_surname){
+            this.staff_id=staff_id;
+            this.staff_forename = staff_forename;
+            this.staff_surname = staff_surname;
+        }
+    }
 
 }
