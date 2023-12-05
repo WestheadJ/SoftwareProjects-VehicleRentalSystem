@@ -22,7 +22,7 @@ namespace DatabaseHandler{
         }
 
         public void Register(){
-            
+            Console.WriteLine("Register Function");
         }
 
     }

@@ -26,7 +26,10 @@ namespace Program
         search-car-detail-license  | staff_id, staff_password, car_license_plate
         search-car-detail-vin  | staff_id, staff_password, car_vin
         search-car-detail-id  | staff_id, staff_password, car_id
-        
+        add-car | staff_id, staff_password, car_id, car_model, car_make, car_vin, car_plate_number, used by any member of staff
+        remove-car | staff_id, staff_password, car_id, can only be used by an admin
+        remove-staff | staff_id, staff_password, staff_id, can only be used by an admin
+
     Shorthands:
         -h = help 
         -v = version
@@ -40,7 +43,10 @@ namespace Program
         -scd = search-customer-details
         -scdl = search-car-details-license
         -scdv = search-car-details-vin
-        -scdid = search-car-details-id";
+        -scdid = search-car-details-id
+        -ac = add-car
+        -rc = remove-car
+        -rs = remove-staff";
             try
             {
                 Database DB = new Database();
@@ -73,8 +79,14 @@ namespace Program
                 if (DB.Login(staff_id, password))
                 {
                     Console.WriteLine("Logged In!");
-                    Menu(new Dictionary<string, string> { { "1", "Register" }, { "2", "Help" } },
-                    new List<Action> { new Action(() => { Help(help); }), new Action(() => { Help(help); }) });
+                    Menu(new Dictionary<string, string> { 
+                        { "1", "Register a new user" },
+                        { "2", "Help list" } 
+                    },
+                    new List<Action> { 
+                        new Action(() => { DB.Register(); }), 
+                        new Action(() => { Help(help); }) 
+                    });
                 }
                 else
                 {
