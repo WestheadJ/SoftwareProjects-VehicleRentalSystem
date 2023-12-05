@@ -121,32 +121,6 @@ namespace Program
                     MenuWrite(options,position);
                 }
 
-                // for (int count = 0; count < options.Count(); count++)
-                // {
-                //     if (count == position)
-                //     {
-                //         Console.ForegroundColor = ConsoleColor.Black;
-                //         Console.BackgroundColor = ConsoleColor.White;
-
-                //         Console.Write(count + 1 + ". " + options[(count + 1).ToString()]);
-                //         Console.ResetColor();
-                //         Console.Write("\n");
-                //     }
-                //     else
-                //     {
-                //         Console.WriteLine(count + 1 + ". " + options[(count + 1).ToString()]);
-                //     }
-
-
-                // }
-
-                // foreach(var i in options){
-                //     Console.WriteLine(i.Key + ", "+ i.Value);
-                // }
-
-                // foreach(Action action in actions){
-                //     action();
-                // }
                 void MenuWrite(Dictionary<string, string> options,int position)
                 {
                     for (int count = 0; count < options.Count(); count++)
@@ -156,12 +130,12 @@ namespace Program
                             Console.ForegroundColor = ConsoleColor.Black;
                             Console.BackgroundColor = ConsoleColor.White;
 
-                            Console.WriteLine(count + 1 + ". " + options[(count + 1).ToString()]);
+                            Console.Write(count + 1 + ". " + options[(count + 1).ToString()]);
                             Console.ResetColor();
                         }
                         else
                         {
-                            Console.WriteLine(count + 1 + ". " + options[(count + 1).ToString()]);
+                            Console.WriteLine("\n"+(count + 1) + ". " + options[(count + 1).ToString()]);
                             Console.ResetColor();
                         }
                     }
