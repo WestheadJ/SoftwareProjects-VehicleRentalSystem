@@ -16,19 +16,19 @@ namespace Program
         -help, help commands
         -version, version
         login | staff_id, staff_password = Used for logging in, used by any member of staff.
-        register | staff_forename, staff_surname, staff_email, staff_phone_number, is_admin, staff_id = Used for registering, can only be used by an admin.
+        register | staff_id, staff,password, new_staff_forename, new_staff_surname, new_staff_email, new_staff_phone_number, is_admin= Used for registering, can only be used by an admin.
         rent-car-new | staff_id, staff_password, car_id, customer_forename, customer_surname, customer_email, customer_phone_number, start_date, end_date = Rent a car with a new customer, used by any member of staff.
         rent-car-old | staff_id, staff_password, car_id, customer_id, start_date, end_date = Rent a car with an existing customer, used by any member of staff.
-        search-rented | staff_id, staff_password = Search for all rented cars, used by any member of staff. 
-        search-available | staff_id, staff_password = Search for all available to rent cars, used by any member of staff.
-        search-staff-details | staff_id, staff_password, staff_id = Search for a member of staffs details, can only be used by an admin.
+        search-rented | staff_id, staff_password = Search for all rented cars = used by any member of staff. 
+        search-available | staff_id, staff_password = Search for all available to rent car = used by any member of staff.
+        search-staff-details | staff_id, staff_password, staff_id = Search for a member of staffs details = can only be used by an admin.
         search-customer-details | staff_id, staff_password, customer_email = 
-        search-car-detail-license  | staff_id, staff_password, car_license_plate
-        search-car-detail-vin  | staff_id, staff_password, car_vin
-        search-car-detail-id  | staff_id, staff_password, car_id
-        add-car | staff_id, staff_password, car_id, car_model, car_make, car_vin, car_plate_number, used by any member of staff
-        remove-car | staff_id, staff_password, car_id, can only be used by an admin
-        remove-staff | staff_id, staff_password, staff_id, can only be used by an admin
+        search-car-detail-license  | staff_id, staff_password, car_license_plate =
+        search-car-detail-vin  | staff_id, staff_password, car_vin = 
+        search-car-detail-id  | staff_id, staff_password, car_id =
+        add-car | staff_id, staff_password, car_id, car_model, car_make, car_vin, car_plate_number = used by any member of staff
+        remove-car | staff_id, staff_password, car_id = can only be used by an admin
+        remove-staff | staff_id, staff_password, staff_id = can only be used by an admin
 
     Shorthands:
         -h = help 
@@ -55,33 +55,24 @@ namespace Program
                 {
                     Console.WriteLine("No arguments given!");
                     Help(help);
+
                 }
                 else
                 {
-                    if (args[0] == "help" || args[0] == "-h")
-                    {
-                        Help(help);
-                    }
-                    else if (args[0] == "login" || args[0] == "-l")
-                    {
-                        
-                            Login(DB, Convert.ToInt32(args[1]), args[2]);
-                        
-                    }
-                    else if(args[0] == "register"){
-                        
-                        Register(DB,Convert.ToInt32(args[1]),args[2]);
-                        
-                    } 
-                    else if(args[0] == "-r"){
-                        RegisterShorthand(DB,Convert.ToInt32(args[1]),args[2]);
-                    }
+                    if (args[0] == "help" || args[0] == "-h"){Help(help);}
+                    // login | staff_id, staff_password
+                    else if (args[0] == "login" || args[0] == "-l"){Login(DB, Convert.ToInt32(args[1]), args[2]);}
+                    // register | staff_forename, staff_surname, staff_email, staff_phone_number, is_admin, staff_id
+                    // else if(args[0] == "register"){Register(DB,Convert.ToInt32(args[1]),args[2]);} 
+                    // // register | staff_id, staff,password, new_staff_forename, new_staff_surname, new_staff_email, new_staff_phone_number, is_admin
+                    // else if(args[0] == "-r"){RegisterShorthand(DB,Convert.ToInt32(args[1]),args[2]);}
                 }
             }
             catch(IndexOutOfRangeException){
                 Console.WriteLine("Not enough arguments given - staff id or password was supplied");
                 Console.WriteLine(help);
             }
+
             catch (Exception err)
             {
                 Console.WriteLine(err);
@@ -99,8 +90,8 @@ namespace Program
                         { "2", "Help list" } 
                     },
                     new List<Action> { 
-                        new Action(() => { Register(DB,staff_id,staff_password); }), 
-                        new Action(() => { Help(help); }) 
+                        new Action(() => { Register(DB,staff_id,staff_password);}), 
+                        new Action(() => { Help(help);}) 
                     });
                 }
                 else
@@ -120,7 +111,7 @@ namespace Program
                 string new_staff_email = Console.ReadLine();
                 Console.WriteLine("Enter new staff members' phone number: ");
                 int new_staff_phone_number = Convert.ToInt32(Console.ReadLine());
-                Console.WriteLine("Enter new staff members' password: ");
+                Convert.ToInt32(Console.WriteLine("Enter new staff members' password: "));
                 string new_staff_password = Console.ReadLine();
                 int is_admin = 0;
                 while(true){
@@ -132,22 +123,26 @@ namespace Program
                     }
                     break;
                 }
+                Console.WriteLine("Press a key to go back to the menu ->");
+                Console.Read();
 
             }
 
             void RegisterShorthand(Database DB,int staff_id,string staff_password){
-
+                
             }
 
             void Help(string help)
             {
                 Console.WriteLine(help);
+                Console.WriteLine("Press a key to go back to the menu ->");
+                Console.Read();
             }
 
             void Menu(Dictionary<string, string> options, List<Action> actions)
             {
                 int position = 0;
-                MenuWrite(options,position);
+                Render(options,position);
                 while (true)
                 {
                     var key = Console.ReadKey();
@@ -159,26 +154,25 @@ namespace Program
                             position = options.Count-1;
                         }
                         else { position--; }
-                                            Console.Clear();
-
-
+                            Console.Clear();
                     }
                     else if(key.Key == ConsoleKey.DownArrow){
                         if(position == options.Count-1){
                             position = 0;
                         }
                         else{position ++;}
-                                            Console.Clear();
+                        Console.Clear();
 
                     }
                     else if(key.Key == ConsoleKey.Enter){
                         actions[position]();
                     }
-                    MenuWrite(options,position);
+                    Render(options,position);
                 }
 
-                void MenuWrite(Dictionary<string, string> options,int position)
+                void Render(Dictionary<string, string> options,int position)
                 {
+                    Console.Clear();
                     for (int count = 0; count < options.Count(); count++)
                     {
                         if (count == position)

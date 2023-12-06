@@ -36,6 +36,21 @@ namespace DatabaseHandler{
             if(staff.Count()==0){
                 return false;
             }
+
+            using(var connection = new SqliteConnection(database)){
+                connection.Open();
+                var command =connection.CreateCommand(connection);
+                command.CommandText = "INSERT INTO Staff(staff_forename,staff_surname,staff_password,staff_email,staff_phone_number,is_admin) VALUES(@forename,@surname,@password,@email,@phone_number,@is_admin)";
+                command.Parameters.AddWithValue("@forename",new_staff_forename);
+                command.Parameters.AddWithValue("@surname",new_staff_surname);
+                command.Parameters.AddWithValue("@email",new__staff_email);
+                command.Parameters.AddWithValue("@password",new_staff_password);
+                command.Parameters.AddWithValue("@phone_email",new_staff_phone_number);
+                command.Parameters.AddWithValue("@is_admin",is_admin)
+
+                command.Prepare();
+                command.ExecuteNonQuery();
+            }
             return true;
         }
 
