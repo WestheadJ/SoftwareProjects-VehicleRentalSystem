@@ -1,32 +1,25 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\james\\Documents\\GitHub\\SoftwareProjects-VehicleRentalSystem\\SoftwareProjects-VehicleRentalSystem.csproj": {}
+    "/Users/james/Projects/SoftwareProjects-VehicleRentalSystem/SoftwareProjects-VehicleRentalSystem.csproj": {}
   },
   "projects": {
-    "C:\\Users\\james\\Documents\\GitHub\\SoftwareProjects-VehicleRentalSystem\\SoftwareProjects-VehicleRentalSystem.csproj": {
+    "/Users/james/Projects/SoftwareProjects-VehicleRentalSystem/SoftwareProjects-VehicleRentalSystem.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\james\\Documents\\GitHub\\SoftwareProjects-VehicleRentalSystem\\SoftwareProjects-VehicleRentalSystem.csproj",
+        "projectUniqueName": "/Users/james/Projects/SoftwareProjects-VehicleRentalSystem/SoftwareProjects-VehicleRentalSystem.csproj",
         "projectName": "SoftwareProjects-VehicleRentalSystem",
-        "projectPath": "C:\\Users\\james\\Documents\\GitHub\\SoftwareProjects-VehicleRentalSystem\\SoftwareProjects-VehicleRentalSystem.csproj",
-        "packagesPath": "C:\\Users\\james\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\james\\Documents\\GitHub\\SoftwareProjects-VehicleRentalSystem\\obj\\",
+        "projectPath": "/Users/james/Projects/SoftwareProjects-VehicleRentalSystem/SoftwareProjects-VehicleRentalSystem.csproj",
+        "packagesPath": "/Users/james/.nuget/packages/",
+        "outputPath": "/Users/james/Projects/SoftwareProjects-VehicleRentalSystem/obj/",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\james\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+          "/Users/james/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net7.0"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -66,7 +59,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.402\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/Users/james/.vscode-dotnet-sdk/.dotnet/sdk/7.0.100/RuntimeIdentifierGraph.json"
         }
       }
     }

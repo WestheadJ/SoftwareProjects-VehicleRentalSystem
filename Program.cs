@@ -51,7 +51,6 @@ namespace Program
             try
             {
                 Database DB = new Database();
-
                 if (args.Length == 0)
                 {
                     Console.WriteLine("No arguments given!");
@@ -65,10 +64,22 @@ namespace Program
                     }
                     else if (args[0] == "login" || args[0] == "-l")
                     {
-                        Login(DB, Convert.ToInt32(args[1]), args[2]);
+                        try{
+                            Login(DB, Convert.ToInt32(args[1]), args[2]);
+                            }
+                        catch(IndexOutOfRangeException){
+                            Console.WriteLine("Not enough arguments given - staff id or password was supplied");
+                            Console.WriteLine(help);
+                        }
                     }
                     else if(args[0] == "register"){
+                        try{
                         Register(DB,Convert.ToInt32(args[1]),args[2]);
+                            }
+                        catch(IndexOutOfRangeException){
+                            Console.WriteLine("Not enough arguments given - staff id or password was supplied");
+                            Console.WriteLine(help);
+                        }
                     } 
                     else if(args[0] == "-r"){
                         RegisterShorthand(DB,Convert.ToInt32(args[1]),args[2]);
@@ -124,9 +135,6 @@ namespace Program
                     }
                     break;
                 }
-
-            
-
 
             }
 
