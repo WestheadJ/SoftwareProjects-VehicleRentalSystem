@@ -64,33 +64,30 @@ namespace Program
                     }
                     else if (args[0] == "login" || args[0] == "-l")
                     {
-                        try{
+                        
                             Login(DB, Convert.ToInt32(args[1]), args[2]);
-                            }
-                        catch(IndexOutOfRangeException){
-                            Console.WriteLine("Not enough arguments given - staff id or password was supplied");
-                            Console.WriteLine(help);
-                        }
+                        
                     }
                     else if(args[0] == "register"){
-                        try{
+                        
                         Register(DB,Convert.ToInt32(args[1]),args[2]);
-                            }
-                        catch(IndexOutOfRangeException){
-                            Console.WriteLine("Not enough arguments given - staff id or password was supplied");
-                            Console.WriteLine(help);
-                        }
+                        
                     } 
                     else if(args[0] == "-r"){
                         RegisterShorthand(DB,Convert.ToInt32(args[1]),args[2]);
                     }
                 }
             }
+            catch(IndexOutOfRangeException){
+                Console.WriteLine("Not enough arguments given - staff id or password was supplied");
+                Console.WriteLine(help);
+            }
             catch (Exception err)
             {
                 Console.WriteLine(err);
 
             }
+            
 
             void Login(Database DB, int staff_id, string staff_password)
             {
