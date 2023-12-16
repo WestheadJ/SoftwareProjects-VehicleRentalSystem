@@ -18,7 +18,6 @@ namespace Program
         login | staff_id, staff_password = Used for logging in, used by any member of staff.
         register | staff_id, staff,password, new_staff_forename, new_staff_surname, new_staff_email, new_staff_phone_number, is_admin= Used for registering, can only be used by an admin.
         rent-car-new | staff_id, staff_password, car_id, customer_forename, customer_surname, customer_email, customer_phone_number, start_date, end_date = Rent a car with a new customer, used by any member of staff.
-        rent-car-old | staff_id, staff_password, car_id, customer_id, start_date, end_date = Rent a car with an existing customer, used by any member of staff.
         search-rented | staff_id, staff_password = Search for all rented cars = used by any member of staff. 
         search-available | staff_id, staff_password = Search for all available to rent car = used by any member of staff.
         search-staff-details | staff_id, staff_password, staff_id = Search for a member of staffs details = can only be used by an admin.
@@ -36,7 +35,6 @@ namespace Program
         -l = login
         -r = register
         -rcn = rent-car-new
-        -rco = rent-car-old
         -sr = search-rented
         -sa = search-available
         -ssd = search-staff-details
@@ -59,11 +57,11 @@ namespace Program
                     // login | staff_id, staff_password
                     else if (args[0] == "login" || args[0] == "-l") { 
                         Login(DB, Convert.ToInt32(args[1]), args[2]);}
-                    // register | staff_forename, staff_surname, staff_email, staff_phone_number, is_admin, staff_id
-                    else if (args[0] == "register") { RegisterShorthand(DB, Convert.ToInt32(args[1]), args[2],args[3],args[4],args[5],Convert.ToInt64(args[6]),args[7],args[8]); }
                     // register | staff_id, staff,password, new_staff_forename, new_staff_surname, new_staff_email, new_staff_phone_number, is_admin
-                    else if (args[0] == "-r") { RegisterShorthand(DB, Convert.ToInt32(args[1]), args[2],args[3],args[4],args[5],Convert.ToInt64(args[6]),args[7],args[8]); }
-                    else if (args[0] == "rent-car-new")
+                    else if (args[0] == "register" || args[0] == "-r") { RegisterShorthand(DB, Convert.ToInt32(args[1]), args[2],args[3],args[4],args[5],Convert.ToInt64(args[6]),args[7],args[8]); }
+                    // rent-car-new | staff_id, staff_password, car_id, customer_forename, customer_surname, customer_email, customer_phone_number, start_date, end_date 
+                    else if (args[0] == "rent-car-new" || args[0] == "-rcn"){}
+                    
                 }
             }
             catch (IndexOutOfRangeException)
@@ -157,7 +155,9 @@ namespace Program
             
             }
 
-            void 
+            void RentCar(){
+
+            }
 
             void Help()
             {
