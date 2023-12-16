@@ -21,7 +21,7 @@ namespace ORM{
     }
 
     class Staff {
-        private int staff_id;
+        protected int staff_id;
         public int Staff_ID{get{return staff_id;}set{staff_id=value;}}
         private string staff_forename;
         public string Staff_Forename{get{return staff_forename;}set{staff_forename=value;}}
