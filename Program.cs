@@ -78,10 +78,12 @@ namespace Program
                     Console.WriteLine("Logged In!");
                     Menu(new Dictionary<string, string> {
                         { "1", "Register a new user" },
-                        { "2", "Help list" }
+                        { "2", "Rent a car" },
+                        { "3", "Help list"}
                     },
                     new List<Action> {
                         new Action(() => { Register(DB,staff_id,staff_password);}),
+                        new Action(()=>{Console.WriteLine("Rent a new car")});
                         new Action(() => { Help();})
                     });
                     File.Delete("info.dat");
