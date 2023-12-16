@@ -10,13 +10,16 @@ namespace ORM{
         public string Car_Vin{get{return car_vin;}set{car_vin=value;}}
         private string car_license_plate;
         public string Car_License_Plate{get{return car_license_plate;}set{car_license_plate=value;}}
+        private float car_price;
+        public float Car_Price{get{return car_price}set{car_price=value;}}
 
-        public Car(int car_id,string car_make,string car_model,string car_vin,string car_license_plate){
+        public Car(int car_id,string car_make,string car_model,string car_vin,string car_license_plate,float car_price){
             this.car_id = car_id;
             this.car_make = car_make;
             this.car_model = car_model;
             this.car_vin = car_vin;
             this.car_license_plate = car_license_plate;
+            this.car_price = car_price;
         }
     }
 

@@ -60,9 +60,10 @@ namespace Program
                     else if (args[0] == "login" || args[0] == "-l") { 
                         Login(DB, Convert.ToInt32(args[1]), args[2]);}
                     // register | staff_forename, staff_surname, staff_email, staff_phone_number, is_admin, staff_id
-                    else if (args[0] == "register") { Register(DB, Convert.ToInt32(args[1]), args[2]); }
+                    else if (args[0] == "register") { RegisterShorthand(DB, Convert.ToInt32(args[1]), args[2],args[3],args[4],args[5],Convert.ToInt64(args[6]),args[7],args[8]); }
                     // register | staff_id, staff,password, new_staff_forename, new_staff_surname, new_staff_email, new_staff_phone_number, is_admin
                     else if (args[0] == "-r") { RegisterShorthand(DB, Convert.ToInt32(args[1]), args[2],args[3],args[4],args[5],Convert.ToInt64(args[6]),args[7],args[8]); }
+                    else if (args[0] == "rent-car-new")
                 }
             }
             catch (IndexOutOfRangeException)
@@ -155,6 +156,8 @@ namespace Program
                 DB.Register(staff_id,staff_password,new_staff_forename,new_staff_surname,new_staff_email,new_staff_phone_number,new_staff_password,new_staff_is_admin);
             
             }
+
+            void 
 
             void Help()
             {
