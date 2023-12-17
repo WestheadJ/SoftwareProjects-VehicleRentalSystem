@@ -69,13 +69,15 @@ namespace DatabaseHandler
             return true;
         }
 
-        public bool RentCar(){
+        public bool RentCar(int car_id, long customer_id, int staff_id, string start_date, string end_date)
+        {
+            Console.WriteLine("Renting Car");
             return false;
         }
 
         // --- GET Cars ---
 
-        public Tuple<bool, List<Car>> GetCarByID(int car_id )
+        public Tuple<bool, List<Car>> GetCarByID(int car_id)
         {
             List<Car> cars = new List<Car>();
             using (var connection = new SqliteConnection(database))
@@ -96,7 +98,7 @@ namespace DatabaseHandler
             return Tuple.Create(true, cars);
         }
 
-        public Tuple<bool, List<Car>> GetCarByVIN(string car_vin )
+        public Tuple<bool, List<Car>> GetCarByVIN(string car_vin)
         {
             List<Car> cars = new List<Car>();
             using (var connection = new SqliteConnection(database))
@@ -117,7 +119,7 @@ namespace DatabaseHandler
             return Tuple.Create(true, cars);
         }
 
-        public Tuple<bool, List<Car>> GetCarByLicensePlate(string car_license_plate )
+        public Tuple<bool, List<Car>> GetCarByLicensePlate(string car_license_plate)
         {
             List<Car> cars = new List<Car>();
             using (var connection = new SqliteConnection(database))
@@ -138,13 +140,14 @@ namespace DatabaseHandler
             return Tuple.Create(true, cars);
         }
 
-        public bool GetRentalAvailability(int car_id, string start_date, string end_date){
+        public bool GetRentalAvailability(int car_id, string start_date, string end_date)
+        {
             List<int> results = new List<int>(1);
             using (var connection = new SqliteConnection(database))
             {
                 connection.Open();
                 var command = connection.CreateCommand();
-                command.CommandText = ("SELECT * FROM Rentals WHERE car_id={0} AND ({1} BETWEEN start_date AND end_date) OR ({2} BETWEEN start_date AND end_date) OR (start_date BETWEEN {1} AND {2})",car_id,start_date,end_date) ;
+                command.CommandText = $"SELECT * FROM Rentals WHERE car_id={car_id} AND ({start_date} BETWEEN rental_start_date AND rental_end_date) OR ({end_date} BETWEEN rental_start_date AND rental_end_date) OR (rental_start_date BETWEEN {start_date} AND {end_date})";
                 SqliteDataReader reader = command.ExecuteReader();
                 while (reader.Read())
                 {
@@ -152,19 +155,20 @@ namespace DatabaseHandler
                 }
             }
 
-            if(results.Count == 0){
+            if (results.Count == 0)
+            {
                 return true;
             }
 
             return false;
         }
 
-        
+
 
         // --- END GET Cars ---
 
         // --- GET Customers ---
-        
+
         public Tuple<bool, List<Customer>> GetCustomerByID(int customer_id)
         {
             List<Customer> customers = new List<Customer>();
@@ -172,7 +176,7 @@ namespace DatabaseHandler
             {
                 connection.Open();
                 var command = connection.CreateCommand();
-                command.CommandText = "SELECT * FROM Customers WHERE customer_id= " + customer_id;                
+                command.CommandText = "SELECT * FROM Customers WHERE customer_id= " + customer_id;
                 SqliteDataReader reader = command.ExecuteReader();
                 while (reader.Read())
                 {
@@ -181,11 +185,11 @@ namespace DatabaseHandler
             }
             if (customers.Count() == 0)
             {
-                return Tuple.Create(false,customers);
+                return Tuple.Create(false, customers);
             }
             return Tuple.Create(true, customers);
         }
-        
+
         public Tuple<bool, List<Customer>> GetCustomerByEmail(string customer_email)
         {
             List<Customer> customers = new List<Customer>();
@@ -193,7 +197,7 @@ namespace DatabaseHandler
             {
                 connection.Open();
                 var command = connection.CreateCommand();
-                command.CommandText = "SELECT * FROM Customers WHERE customer_email= " + customer_email;
+                command.CommandText = $"SELECT * FROM Customers WHERE customer_email= '{customer_email}';";
                 SqliteDataReader reader = command.ExecuteReader();
                 while (reader.Read())
                 {
@@ -202,7 +206,7 @@ namespace DatabaseHandler
             }
             if (customers.Count() == 0)
             {
-                return Tuple.Create(false,customers);
+                return Tuple.Create(false, customers);
             }
             return Tuple.Create(true, customers);
         }
@@ -223,40 +227,41 @@ namespace DatabaseHandler
             }
             if (customers.Count() == 0)
             {
-                return Tuple.Create(false,customers);
+                return Tuple.Create(false, customers);
             }
             return Tuple.Create(true, customers);
         }
 
         // --- END GET Customers ---
 
-        public bool CreateNewCustomer(Customer new_customer)
+        public int CreateNewCustomer(Customer new_customer)
         {
-            try
+            using (var connection = new SqliteConnection(database))
             {
-                using (var connection = new SqliteConnection(database))
+                connection.Open();
+                var command = connection.CreateCommand();
+                command.CommandText = "INSERT INTO Customers(customer_forename,customer_surname,customer_email,customer_phone_number) VALUES(@forename,@surname,@email,@phone_number)";
+                command.Parameters.AddWithValue("@forename", new_customer.Customer_Forename);
+                command.Parameters.AddWithValue("@surname", new_customer.Customer_Surname);
+                command.Parameters.AddWithValue("@email", new_customer.Customer_Email);
+                command.Parameters.AddWithValue("@phone_number", new_customer.Customer_Phone_Number);
+                command.Prepare();
+                command.ExecuteNonQuery();
+            }
+            int customer_id = 0;
+            using (var connection = new SqliteConnection(database))
+            {
+                connection.Open();
+                var command = connection.CreateCommand();
+                command.CommandText = $"SELECT * FROM Customers WHERE customer_email= '{new_customer.Customer_Email}';";
+                SqliteDataReader reader = command.ExecuteReader();
+                while (reader.Read())
                 {
-                    connection.Open();
-                    var command = connection.CreateCommand();
-                    command.CommandText = "INSERT INTO Customer(customer_forename,customer_surname,customer_email,staff_phone_number,) VALUES(@forename,@surname,@email,@phone_number)";
-                    command.Parameters.AddWithValue("@forename", new_customer.Customer_Forename);
-                    command.Parameters.AddWithValue("@surname", new_customer.Customer_Surname);
-                    command.Parameters.AddWithValue("@email", new_customer.Customer_Email);
-                    command.Parameters.AddWithValue("@phone_number", new_customer.Customer_Phone_Number);
-                    command.Prepare();
-                    command.ExecuteNonQuery();
+                    customer_id = Convert.ToInt32(reader["customer_id"].ToString());
                 }
-                return true;
             }
-            catch
-            {
-                return false;
-            }
+            return customer_id;
         }
-
-
-
-
 
         // Writes login details of current user
         void SaveDetails(int staff_id, string staff_password)

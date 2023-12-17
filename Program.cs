@@ -56,13 +56,15 @@ namespace Program
                 {
                     if (args[0] == "help" || args[0] == "-h") { Help(); }
                     // login | staff_id, staff_password
-                    else if (args[0] == "login" || args[0] == "-l") { 
-                        Login(DB, Convert.ToInt32(args[1]), args[2]);}
+                    else if (args[0] == "login" || args[0] == "-l")
+                    {
+                        Login(DB, Convert.ToInt32(args[1]), args[2]);
+                    }
                     // register | staff_id, staff,password, new_staff_forename, new_staff_surname, new_staff_email, new_staff_phone_number, is_admin
-                    else if (args[0] == "register" || args[0] == "-r") { RegisterShorthand(DB, Convert.ToInt32(args[1]), args[2],args[3],args[4],args[5],Convert.ToInt64(args[6]),args[7],args[8]); }
+                    else if (args[0] == "register" || args[0] == "-r") { RegisterShorthand(DB, Convert.ToInt32(args[1]), args[2], args[3], args[4], args[5], Convert.ToInt64(args[6]), args[7], args[8]); }
                     // rent-car-new | staff_id, staff_password, car_id, customer_forename, customer_surname, customer_email, customer_phone_number, start_date, end_date 
-                    else if (args[0] == "rent-car-new" || args[0] == "-rcn"){}
-                    
+                    else if (args[0] == "rent-car-new" || args[0] == "-rcn") { RentCarShorthand(DB,Convert.ToInt32(args[1]),args[2],Convert.ToInt32(args[3]),new Customer(args[4],args[5],args[6],Convert.ToInt64(args[7])),args[8],args[9]);}
+
                 }
             }
             catch (IndexOutOfRangeException)
@@ -70,6 +72,7 @@ namespace Program
                 Console.WriteLine("Not enough arguments given - staff id or password was supplied"); Help();
             }
             catch (Exception err) { Console.WriteLine(err); }
+
 
             // --- Login ---
 
@@ -92,7 +95,7 @@ namespace Program
                     File.Delete("info.dat");
                 }
                 // If login unsuccessful
-                else{Console.WriteLine("Could not login, details are incorrect!");}
+                else { Console.WriteLine("Could not login, details are incorrect!"); }
             }
 
             // --- END Login ---
@@ -138,45 +141,63 @@ namespace Program
                 Console.WriteLine("Staff Password: ");
                 string admin_staff_password = Console.ReadLine();
 
-                Tuple<int,string> account_details = ReadStaffDetails();
+                Tuple<int, string> account_details = ReadStaffDetails();
 
-                if(admin_staff_id == account_details.Item1 && admin_staff_password == account_details.Item2){
-                    DB.Register(admin_staff_id,admin_staff_password,new_staff_forename,new_staff_surname,new_staff_email,new_staff_phone_number,new_staff_password,is_admin);
+                if (admin_staff_id == account_details.Item1 && admin_staff_password == account_details.Item2)
+                {
+                    DB.Register(admin_staff_id, admin_staff_password, new_staff_forename, new_staff_surname, new_staff_email, new_staff_phone_number, new_staff_password, is_admin);
                 }
 
             }
 
             // register | staff_id, staff,password, new_staff_forename, new_staff_surname, new_staff_email, new_staff_phone_number, is_admin
-            void RegisterShorthand(Database DB, int staff_id, string staff_password, string new_staff_forename, string new_staff_surname, string new_staff_email, long new_staff_phone_number,string new_staff_password, string is_admin ){
-            int new_staff_is_admin;
-            
-                if(is_admin == "yes"){
+            void RegisterShorthand(Database DB, int staff_id, string staff_password, string new_staff_forename, string new_staff_surname, string new_staff_email, long new_staff_phone_number, string new_staff_password, string is_admin)
+            {
+                int new_staff_is_admin;
+
+                if (is_admin == "yes")
+                {
                     new_staff_is_admin = 1;
                 }
-                else{
+                else
+                {
                     new_staff_is_admin = 0;
                 }
-                DB.Register(staff_id,staff_password,new_staff_forename,new_staff_surname,new_staff_email,new_staff_phone_number,new_staff_password,new_staff_is_admin);
-            
+                DB.Register(staff_id, staff_password, new_staff_forename, new_staff_surname, new_staff_email, new_staff_phone_number, new_staff_password, new_staff_is_admin);
+
             }
 
             // ---- END Register ----
-        
+
             // --- Rent Car ---
 
-            // rent-car-new | staff_id, staff_password, car_id, customer_forename, customer_surname, customer_email, customer_phone_number, start_date, end_date
-            void RentCarShorthand(Database DB, int staff_id,string staff_password,int car_id,Customer customer,DateTime start_date,DateTime end_date){
+            // rent-car-new | staff_id, staff_password, car_id, customer_forename, customer_surname, customer_email, customer_phone_number, start_date[yyyy-mm-dd-hh], end_date[yyyy-mm-dd-hh]
+            void RentCarShorthand(Database DB, int staff_id, string staff_password, int car_id, Customer customer, string start_date_string, string end_date_string)
+            {
                 // Login
-                if(DB.Login(staff_id,staff_password)){
+                if (DB.Login(staff_id, staff_password))
+                {
                     // Does the car exist
-                    if(DB.GetCarByID(car_id=car_id).Item1){
-                        if(!DB.GetRentalAvailability(car_id,start_date,end_date)){
-                            
+                    if (DB.GetCarByID(car_id = car_id).Item1)
+                    {
+                        // If the car is available
+                        if (DB.GetRentalAvailability(car_id, start_date_string, end_date_string))
+                        {
+                            // Does the customer exist
+                            Tuple<bool,List<Customer>> customer_details = DB.GetCustomerByEmail(customer.Customer_Email);
+                                // If not
+                                long customer_id;
+                                if(!customer_details.Item1){
+                                    customer_id=DB.CreateNewCustomer(customer);
+                                }
+                                else{customer_id =Convert.ToInt64(customer_details.Item2[0].Customer_ID);}
+                                Console.WriteLine(customer_id);
+                                DB.RentCar(car_id,customer_id,staff_id,start_date_string,end_date_string);
                         }
-                        Console.WriteLine("Car is unavailable for this time period!")
-                        // if(!DB.GetCustomerByEmail(customer.Customer_Email).Item1){
-                        //     DB.CreateNewCustomer(customer);
-                        // }
+                        else{
+                        Console.WriteLine("Car is unavailable for this time period!");
+
+                        }
                     }
                 }
             }
@@ -240,25 +261,25 @@ namespace Program
             }
 
             void Render(Dictionary<string, string> options, int position)
+            {
+                Console.Clear();
+                for (int count = 0; count < options.Count(); count++)
                 {
-                    Console.Clear();
-                    for (int count = 0; count < options.Count(); count++)
+                    if (count == position)
                     {
-                        if (count == position)
-                        {
-                            Console.ForegroundColor = ConsoleColor.Black;
-                            Console.BackgroundColor = ConsoleColor.White;
+                        Console.ForegroundColor = ConsoleColor.Black;
+                        Console.BackgroundColor = ConsoleColor.White;
 
-                            Console.Write(count + 1 + ". " + options[(count + 1).ToString()]);
-                            Console.ResetColor();
-                        }
-                        else
-                        {
-                            Console.WriteLine("\n" + (count + 1) + ". " + options[(count + 1).ToString()]);
-                            Console.ResetColor();
-                        }
+                        Console.Write(count + 1 + ". " + options[(count + 1).ToString()]);
+                        Console.ResetColor();
+                    }
+                    else
+                    {
+                        Console.WriteLine("\n" + (count + 1) + ". " + options[(count + 1).ToString()]);
+                        Console.ResetColor();
                     }
                 }
+            }
 
             // --- END Menu Methods ---
         }
