@@ -1,4 +1,5 @@
 ﻿using DatabaseHandler;
+using ORM;
 namespace Program
 {
 
@@ -70,6 +71,8 @@ namespace Program
             }
             catch (Exception err) { Console.WriteLine(err); }
 
+            // --- Login ---
+
             void Login(Database DB, int staff_id, string staff_password)
             {
                 // If login successful
@@ -83,18 +86,18 @@ namespace Program
                     },
                     new List<Action> {
                         new Action(() => { Register(DB,staff_id,staff_password);}),
-                        new Action(()=>{Console.WriteLine("Rent a new car")});
+                        new Action(()=>{Console.WriteLine("Rent a new car");}),
                         new Action(() => { Help();})
                     });
                     File.Delete("info.dat");
                 }
                 // If login unsuccessful
-                else
-                {
-                    Console.WriteLine("Could not login, details are incorrect!");
-                }
-
+                else{Console.WriteLine("Could not login, details are incorrect!");}
             }
+
+            // --- END Login ---
+
+            // --- Register ----
 
             void Register(Database DB, int staff_id, string staff_password)
             {
@@ -157,9 +160,28 @@ namespace Program
             
             }
 
-            void RentCar(){
+            // ---- END Register ----
+        
+            // --- Rent Car ---
 
+            // rent-car-new | staff_id, staff_password, car_id, customer_forename, customer_surname, customer_email, customer_phone_number, start_date, end_date
+            void RentCarShorthand(Database DB, int staff_id,string staff_password,int car_id,Customer customer,DateTime start_date,DateTime end_date){
+                // Login
+                if(DB.Login(staff_id,staff_password)){
+                    // Does the car exist
+                    if(DB.GetCarByID(car_id=car_id).Item1){
+                        if(!DB.GetRentalAvailability(car_id,start_date,end_date)){
+                            
+                        }
+                        Console.WriteLine("Car is unavailable for this time period!")
+                        // if(!DB.GetCustomerByEmail(customer.Customer_Email).Item1){
+                        //     DB.CreateNewCustomer(customer);
+                        // }
+                    }
+                }
             }
+
+            // ---  END Rent Car ---
 
             void Help()
             {
@@ -167,8 +189,6 @@ namespace Program
                 Console.WriteLine("Press a key to go back to the menu ->");
                 Console.Read();
             }
-
-            // Non menu function:
 
             Tuple<int, string> ReadStaffDetails()
             {
@@ -183,6 +203,7 @@ namespace Program
                 return new Tuple<int, string>(staff_id, staff_password);
             }
 
+            // --- Menu Methods --- 
             void Menu(Dictionary<string, string> options, List<Action> actions)
             {
                 int position = 0;
@@ -216,8 +237,9 @@ namespace Program
                     }
                     Render(options, position);
                 }
+            }
 
-                void Render(Dictionary<string, string> options, int position)
+            void Render(Dictionary<string, string> options, int position)
                 {
                     Console.Clear();
                     for (int count = 0; count < options.Count(); count++)
@@ -238,8 +260,7 @@ namespace Program
                     }
                 }
 
-            }
+            // --- END Menu Methods ---
         }
     }
-
 }

@@ -1,11 +1,14 @@
 using Microsoft.Data.Sqlite;
 using ORM;
+using System.Runtime.InteropServices;
 
 namespace DatabaseHandler
 {
+
     class Database
     {
         public string database = "Data Source=vrs.db";
+
         public bool Login(int staff_id, string staff_password)
         {
             List<Staff> staff = new List<Staff>();
@@ -31,7 +34,6 @@ namespace DatabaseHandler
 
         public bool Register(int staff_id, string staff_password, string new_staff_forename, string new_staff_surname, string new_staff_email, long new_staff_phone_number, string new_staff_password, int is_admin)
         {
-            Console.WriteLine("Register Function");
             List<Staff> staff = new List<Staff>();
             using (var connection = new SqliteConnection(database))
             {
@@ -67,6 +69,195 @@ namespace DatabaseHandler
             return true;
         }
 
+        public bool RentCar(){
+            return false;
+        }
+
+        // --- GET Cars ---
+
+        public Tuple<bool, List<Car>> GetCarByID(int car_id )
+        {
+            List<Car> cars = new List<Car>();
+            using (var connection = new SqliteConnection(database))
+            {
+                connection.Open();
+                var command = connection.CreateCommand();
+                command.CommandText = "SELECT * FROM Cars WHERE car_id= " + car_id;
+                SqliteDataReader reader = command.ExecuteReader();
+                while (reader.Read())
+                {
+                    cars.Add(new Car(Convert.ToInt32(reader["car_id"].ToString()), reader["car_make"].ToString(), reader["car_model"].ToString(), reader["car_vin"].ToString(), reader["car_license_plate"].ToString(), float.Parse(reader["car_price_per_hour"].ToString())));
+                }
+            }
+            if (cars.Count() == 0)
+            {
+                return Tuple.Create(false, cars);
+            }
+            return Tuple.Create(true, cars);
+        }
+
+        public Tuple<bool, List<Car>> GetCarByVIN(string car_vin )
+        {
+            List<Car> cars = new List<Car>();
+            using (var connection = new SqliteConnection(database))
+            {
+                connection.Open();
+                var command = connection.CreateCommand();
+                command.CommandText = "SELECT * FROM Cars WHERE car_vin= " + car_vin;
+                SqliteDataReader reader = command.ExecuteReader();
+                while (reader.Read())
+                {
+                    cars.Add(new Car(Convert.ToInt32(reader["car_id"].ToString()), reader["car_make"].ToString(), reader["car_model"].ToString(), reader["car_vin"].ToString(), reader["car_license_plate"].ToString(), float.Parse(reader["car_price_per_hour"].ToString())));
+                }
+            }
+            if (cars.Count() == 0)
+            {
+                return Tuple.Create(false, cars);
+            }
+            return Tuple.Create(true, cars);
+        }
+
+        public Tuple<bool, List<Car>> GetCarByLicensePlate(string car_license_plate )
+        {
+            List<Car> cars = new List<Car>();
+            using (var connection = new SqliteConnection(database))
+            {
+                connection.Open();
+                var command = connection.CreateCommand();
+                command.CommandText = "SELECT * FROM Cars WHERE car_license_plate= " + car_license_plate;
+                SqliteDataReader reader = command.ExecuteReader();
+                while (reader.Read())
+                {
+                    cars.Add(new Car(Convert.ToInt32(reader["car_id"].ToString()), reader["car_make"].ToString(), reader["car_model"].ToString(), reader["car_vin"].ToString(), reader["car_license_plate"].ToString(), float.Parse(reader["car_price_per_hour"].ToString())));
+                }
+            }
+            if (cars.Count() == 0)
+            {
+                return Tuple.Create(false, cars);
+            }
+            return Tuple.Create(true, cars);
+        }
+
+        public bool GetRentalAvailability(int car_id, string start_date, string end_date){
+            List<int> results = new List<int>(1);
+            using (var connection = new SqliteConnection(database))
+            {
+                connection.Open();
+                var command = connection.CreateCommand();
+                command.CommandText = ("SELECT * FROM Rentals WHERE car_id={0} AND ({1} BETWEEN start_date AND end_date) OR ({2} BETWEEN start_date AND end_date) OR (start_date BETWEEN {1} AND {2})",car_id,start_date,end_date) ;
+                SqliteDataReader reader = command.ExecuteReader();
+                while (reader.Read())
+                {
+                    results.Add(Convert.ToInt32(reader["car_id"].ToString()));
+                }
+            }
+
+            if(results.Count == 0){
+                return true;
+            }
+
+            return false;
+        }
+
+        
+
+        // --- END GET Cars ---
+
+        // --- GET Customers ---
+        
+        public Tuple<bool, List<Customer>> GetCustomerByID(int customer_id)
+        {
+            List<Customer> customers = new List<Customer>();
+            using (var connection = new SqliteConnection(database))
+            {
+                connection.Open();
+                var command = connection.CreateCommand();
+                command.CommandText = "SELECT * FROM Customers WHERE customer_id= " + customer_id;                
+                SqliteDataReader reader = command.ExecuteReader();
+                while (reader.Read())
+                {
+                    customers.Add(new Customer(Convert.ToInt32(reader["customer_id"].ToString()), reader["customer_forename"].ToString(), reader["customer_surname"].ToString(), reader["customer_email"].ToString(), Convert.ToInt64(reader["customer_phone_number"].ToString())));
+                }
+            }
+            if (customers.Count() == 0)
+            {
+                return Tuple.Create(false,customers);
+            }
+            return Tuple.Create(true, customers);
+        }
+        
+        public Tuple<bool, List<Customer>> GetCustomerByEmail(string customer_email)
+        {
+            List<Customer> customers = new List<Customer>();
+            using (var connection = new SqliteConnection(database))
+            {
+                connection.Open();
+                var command = connection.CreateCommand();
+                command.CommandText = "SELECT * FROM Customers WHERE customer_email= " + customer_email;
+                SqliteDataReader reader = command.ExecuteReader();
+                while (reader.Read())
+                {
+                    customers.Add(new Customer(Convert.ToInt32(reader["customer_id"].ToString()), reader["customer_forename"].ToString(), reader["customer_surname"].ToString(), reader["customer_email"].ToString(), Convert.ToInt64(reader["customer_phone_number"].ToString())));
+                }
+            }
+            if (customers.Count() == 0)
+            {
+                return Tuple.Create(false,customers);
+            }
+            return Tuple.Create(true, customers);
+        }
+
+        public Tuple<bool, List<Customer>> GetCustomerByPhoneNumber(long customer_phone_number)
+        {
+            List<Customer> customers = new List<Customer>();
+            using (var connection = new SqliteConnection(database))
+            {
+                connection.Open();
+                var command = connection.CreateCommand();
+                command.CommandText = "SELECT * FROM Customers WHERE customer_phone_number= " + customer_phone_number;
+                SqliteDataReader reader = command.ExecuteReader();
+                while (reader.Read())
+                {
+                    customers.Add(new Customer(Convert.ToInt32(reader["customer_id"].ToString()), reader["customer_forename"].ToString(), reader["customer_surname"].ToString(), reader["customer_email"].ToString(), Convert.ToInt64(reader["customer_phone_number"].ToString())));
+                }
+            }
+            if (customers.Count() == 0)
+            {
+                return Tuple.Create(false,customers);
+            }
+            return Tuple.Create(true, customers);
+        }
+
+        // --- END GET Customers ---
+
+        public bool CreateNewCustomer(Customer new_customer)
+        {
+            try
+            {
+                using (var connection = new SqliteConnection(database))
+                {
+                    connection.Open();
+                    var command = connection.CreateCommand();
+                    command.CommandText = "INSERT INTO Customer(customer_forename,customer_surname,customer_email,staff_phone_number,) VALUES(@forename,@surname,@email,@phone_number)";
+                    command.Parameters.AddWithValue("@forename", new_customer.Customer_Forename);
+                    command.Parameters.AddWithValue("@surname", new_customer.Customer_Surname);
+                    command.Parameters.AddWithValue("@email", new_customer.Customer_Email);
+                    command.Parameters.AddWithValue("@phone_number", new_customer.Customer_Phone_Number);
+                    command.Prepare();
+                    command.ExecuteNonQuery();
+                }
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+
+
+
+
         // Writes login details of current user
         void SaveDetails(int staff_id, string staff_password)
         {
@@ -77,6 +268,6 @@ namespace DatabaseHandler
             bw.Close();
             fs.Close();
         }
-        
+
     }
 }
