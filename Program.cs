@@ -81,7 +81,6 @@ namespace Program
                 // If login successful
                 if (DB.Login(staff_id, staff_password))
                 {
-                    Console.WriteLine("Logged In!");
                     Menu(new Dictionary<string, string> {
                         { "1", "Register a new user" },
                         { "2", "Rent a car" },
@@ -89,13 +88,13 @@ namespace Program
                     },
                     new List<Action> {
                         new Action(() => { Register(DB,staff_id,staff_password);}),
-                        new Action(()=>{Console.WriteLine("Rent a new car");}),
+                        new Action(()=>{RentCar(DB);}),
                         new Action(() => { Help();})
                     });
                     File.Delete("info.dat");
                 }
                 // If login unsuccessful
-                else { Console.WriteLine("Could not login, details are incorrect!"); }
+
             }
 
             // --- END Login ---
@@ -171,14 +170,14 @@ namespace Program
 
             // --- Rent Car ---
 
-            // rent-car-new | staff_id, staff_password, car_id, customer_forename, customer_surname, customer_email, customer_phone_number, start_date[yyyy-mm-dd-hh], end_date[yyyy-mm-dd-hh]
+            // rent-car-new | staff_id, staff_password, car_id, customer_forename, customer_surname, customer_email, customer_phone_number, start_date[yyyy-mm-dd], end_date[yyyy-mm-dd]
             void RentCarShorthand(Database DB, int staff_id, string staff_password, int car_id, Customer customer, string start_date_string, string end_date_string)
             {
                 // Login
                 if (DB.Login(staff_id, staff_password))
                 {
                     // Does the car exist
-                    if (DB.GetCarByID(car_id = car_id).Item1)
+                    if (DB.GetCarByID(car_id).Item1)
                     {
                         // If the car is available
                         if (DB.GetRentalAvailability(car_id, start_date_string, end_date_string))
@@ -191,15 +190,66 @@ namespace Program
                                     customer_id=DB.CreateNewCustomer(customer);
                                 }
                                 else{customer_id =Convert.ToInt64(customer_details.Item2[0].Customer_ID);}
-                                Console.WriteLine(customer_id);
                                 DB.RentCar(car_id,customer_id,staff_id,start_date_string,end_date_string);
-                        }
-                        else{
-                        Console.WriteLine("Car is unavailable for this time period!");
 
                         }
                     }
+                    else{
+                        Console.WriteLine("Car does not exist!");
+                    }
                 }
+            }
+
+            void RentCar(Database DB){
+                Console.WriteLine("Enter the car id of the car you want to rent: ");
+                Customer customer = new Customer();
+
+                int car_id = Convert.ToInt32(Console.ReadLine());
+                if(DB.GetCarByID(car_id).Item1){
+                    Console.WriteLine("Enter the start date in the format of: YYYY-MM-DD e.g 2023-12-25: ");
+                    string start_date = Console.ReadLine();
+                    
+                    Console.WriteLine("Enter the end date in the format of: YYYY-MM-DD e.g 2023-12-25: ");
+                    string end_date = Console.ReadLine();
+
+                    if(DB.GetRentalAvailability(car_id,start_date,end_date)){
+                        Console.WriteLine("Enter the customers forename: ");
+                        customer.Customer_Forename = Console.ReadLine();
+
+                        Console.WriteLine("Enter the customers surname: ");
+                        customer.Customer_Surname = Console.ReadLine();
+
+                        Console.WriteLine("Enter the customers email");
+                        customer.Customer_Email = Console.ReadLine();
+
+                        Console.WriteLine("Enter the customers phone number");
+                        customer.Customer_Phone_Number = Convert.ToInt64(Console.ReadLine());
+
+                        Console.WriteLine("Enter signed in account details:");
+                        
+                        Console.WriteLine("Staff ID: ");
+                        int admin_staff_id = Convert.ToInt32(Console.ReadLine());
+                        Console.WriteLine("Staff Password: ");
+                        string admin_staff_password = Console.ReadLine();
+
+                        Tuple<int, string> account_details = ReadStaffDetails();
+
+                        if (admin_staff_id == account_details.Item1 && admin_staff_password == account_details.Item2)
+                        {
+                             // Does the customer exist
+                            Tuple<bool,List<Customer>> customer_details = DB.GetCustomerByEmail(customer.Customer_Email);
+                                // If not
+                                long customer_id;
+                                if(!customer_details.Item1){
+                                    customer_id=DB.CreateNewCustomer(customer);
+                                }
+                                else{customer_id =Convert.ToInt64(customer_details.Item2[0].Customer_ID);}
+                                DB.RentCar(car_id,customer_id,admin_staff_id,start_date,end_date);
+                        }
+                    }
+                }
+                Console.WriteLine("Press enter to go back ->");
+                Console.Read();
             }
 
             // ---  END Rent Car ---

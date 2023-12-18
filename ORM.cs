@@ -134,6 +134,9 @@ namespace ORM{
             this.customer_phone_number = customer_phone_number;
         }
 
+        public Customer(){
+        }
+
         // --- End of Constructors
     }
 

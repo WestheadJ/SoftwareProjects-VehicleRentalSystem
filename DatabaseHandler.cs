@@ -22,13 +22,17 @@ namespace DatabaseHandler
                 {
                     staff.Add(new Staff(Convert.ToInt32(reader["staff_id"].ToString()), reader["staff_forename"].ToString(), reader["staff_surname"].ToString()));
                 }
+                connection.Close();
+
             }
             if (staff.Count() == 0)
             {
+                Console.WriteLine("Credentials were incorrect!");
                 return false;
             }
 
             SaveDetails(staff_id, staff_password);
+            Console.WriteLine("Credentials were correct, details saved!");
             return true;
         }
 
@@ -45,10 +49,8 @@ namespace DatabaseHandler
                 {
                     staff.Add(new Staff(Convert.ToInt32(reader["staff_id"].ToString()), reader["staff_forename"].ToString(), reader["staff_surname"].ToString()));
                 }
-            }
-            if (staff.Count() == 0)
-            {
-                return false;
+                connection.Close();
+
             }
 
             using (var connection = new SqliteConnection(database))
@@ -62,17 +64,47 @@ namespace DatabaseHandler
                 command.Parameters.AddWithValue("@password", new_staff_password);
                 command.Parameters.AddWithValue("@phone_number", new_staff_phone_number);
                 command.Parameters.AddWithValue("@is_admin", is_admin);
-
                 command.Prepare();
                 command.ExecuteNonQuery();
+                connection.Close();
+
             }
             return true;
         }
 
-        public bool RentCar(int car_id, long customer_id, int staff_id, string start_date, string end_date)
+        public bool RentCar(int car_id, long customer_id, int staff_id, string start_date_string, string end_date_string)
         {
-            Console.WriteLine("Renting Car");
-            return false;
+            float price = 0;
+            DateTime start_date;
+            DateTime end_date;
+            // GET THE DATE TIME TO CHECK THE HOURS
+            if(DateTime.TryParseExact(start_date_string, "yyyy-MM-dd", null, System.Globalization.DateTimeStyles.None, out start_date)
+            &&DateTime.TryParseExact(end_date_string, "yyyy-MM-dd", null, System.Globalization.DateTimeStyles.None, out end_date)){
+                TimeSpan difference = end_date - start_date;
+                int total_hours = (int)difference.TotalHours;
+                price = (float)(total_hours * GetCarPrice(car_id));
+            }
+            else{
+                return false;
+            }            
+            using (var connection = new SqliteConnection(database))
+            {
+                connection.Open();
+                var command = connection.CreateCommand();
+                command.CommandText = "INSERT INTO Rentals(car_id,customer_id,staff_id,rental_start_date,rental_end_date,rental_cost) VALUES(@car_id,@customer_id,@staff_id,@start_date,@end_date,@cost)";
+                command.Parameters.AddWithValue("@car_id", car_id);
+                command.Parameters.AddWithValue("@customer_id",customer_id);
+                command.Parameters.AddWithValue("@staff_id", staff_id);
+                command.Parameters.AddWithValue("@start_date", start_date_string);
+                command.Parameters.AddWithValue("@end_date", end_date_string);
+                command.Parameters.AddWithValue("@cost", price);
+                command.Prepare();
+                command.ExecuteNonQuery();
+                connection.Close();
+            }
+            return true;
+
+
         }
 
         // --- GET Cars ---
@@ -90,6 +122,8 @@ namespace DatabaseHandler
                 {
                     cars.Add(new Car(Convert.ToInt32(reader["car_id"].ToString()), reader["car_make"].ToString(), reader["car_model"].ToString(), reader["car_vin"].ToString(), reader["car_license_plate"].ToString(), float.Parse(reader["car_price_per_hour"].ToString())));
                 }
+                connection.Close();
+
             }
             if (cars.Count() == 0)
             {
@@ -111,6 +145,8 @@ namespace DatabaseHandler
                 {
                     cars.Add(new Car(Convert.ToInt32(reader["car_id"].ToString()), reader["car_make"].ToString(), reader["car_model"].ToString(), reader["car_vin"].ToString(), reader["car_license_plate"].ToString(), float.Parse(reader["car_price_per_hour"].ToString())));
                 }
+                connection.Close();
+
             }
             if (cars.Count() == 0)
             {
@@ -132,6 +168,8 @@ namespace DatabaseHandler
                 {
                     cars.Add(new Car(Convert.ToInt32(reader["car_id"].ToString()), reader["car_make"].ToString(), reader["car_model"].ToString(), reader["car_vin"].ToString(), reader["car_license_plate"].ToString(), float.Parse(reader["car_price_per_hour"].ToString())));
                 }
+                connection.Close();
+
             }
             if (cars.Count() == 0)
             {
@@ -143,27 +181,51 @@ namespace DatabaseHandler
         public bool GetRentalAvailability(int car_id, string start_date, string end_date)
         {
             List<int> results = new List<int>(1);
+
             using (var connection = new SqliteConnection(database))
             {
                 connection.Open();
                 var command = connection.CreateCommand();
-                command.CommandText = $"SELECT * FROM Rentals WHERE car_id={car_id} AND ({start_date} BETWEEN rental_start_date AND rental_end_date) OR ({end_date} BETWEEN rental_start_date AND rental_end_date) OR (rental_start_date BETWEEN {start_date} AND {end_date})";
+                command.CommandText = $"SELECT * FROM Rentals WHERE car_id = {car_id} AND (('{start_date}' BETWEEN rental_start_date AND rental_end_date) OR ('{end_date}' BETWEEN rental_start_date AND rental_end_date) OR (rental_start_date BETWEEN '{start_date}' AND '{end_date}'));";
                 SqliteDataReader reader = command.ExecuteReader();
                 while (reader.Read())
                 {
                     results.Add(Convert.ToInt32(reader["car_id"].ToString()));
                 }
+                connection.Close();
             }
 
             if (results.Count == 0)
             {
+                Console.WriteLine("This car is available");
                 return true;
             }
-
+            Console.WriteLine("This car is unavailable");
             return false;
         }
 
+        /// <summary>
+        /// Get the price rate of a car
+        /// </summary>
+        /// <param name="car_id">The cars' ID</param>
+        /// <returns><c>float</c>: price rate</returns>
+        public float GetCarPrice(int car_id){
+            float price = 0;
+            using (var connection = new SqliteConnection(database))
+            {
+                connection.Open();
+                var command = connection.CreateCommand();
+                command.CommandText = "SELECT car_price_per_hour FROM Cars WHERE car_id=" + car_id;
+                SqliteDataReader reader = command.ExecuteReader();
+                while (reader.Read())
+                {
+                    price = float.Parse(reader["car_price_per_hour"].ToString());
+                }
+                connection.Close();
 
+            }
+            return price;
+        }
 
         // --- END GET Cars ---
 
@@ -182,6 +244,8 @@ namespace DatabaseHandler
                 {
                     customers.Add(new Customer(Convert.ToInt32(reader["customer_id"].ToString()), reader["customer_forename"].ToString(), reader["customer_surname"].ToString(), reader["customer_email"].ToString(), Convert.ToInt64(reader["customer_phone_number"].ToString())));
                 }
+                connection.Close();
+
             }
             if (customers.Count() == 0)
             {
@@ -203,6 +267,8 @@ namespace DatabaseHandler
                 {
                     customers.Add(new Customer(Convert.ToInt32(reader["customer_id"].ToString()), reader["customer_forename"].ToString(), reader["customer_surname"].ToString(), reader["customer_email"].ToString(), Convert.ToInt64(reader["customer_phone_number"].ToString())));
                 }
+                connection.Close();
+
             }
             if (customers.Count() == 0)
             {
@@ -224,6 +290,8 @@ namespace DatabaseHandler
                 {
                     customers.Add(new Customer(Convert.ToInt32(reader["customer_id"].ToString()), reader["customer_forename"].ToString(), reader["customer_surname"].ToString(), reader["customer_email"].ToString(), Convert.ToInt64(reader["customer_phone_number"].ToString())));
                 }
+                connection.Close();
+
             }
             if (customers.Count() == 0)
             {
@@ -247,6 +315,7 @@ namespace DatabaseHandler
                 command.Parameters.AddWithValue("@phone_number", new_customer.Customer_Phone_Number);
                 command.Prepare();
                 command.ExecuteNonQuery();
+                connection.Close();
             }
             int customer_id = 0;
             using (var connection = new SqliteConnection(database))
@@ -259,6 +328,8 @@ namespace DatabaseHandler
                 {
                     customer_id = Convert.ToInt32(reader["customer_id"].ToString());
                 }
+                connection.Close();
+
             }
             return customer_id;
         }
