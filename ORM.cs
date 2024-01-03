@@ -11,7 +11,7 @@ namespace ORM{
         // --- End of Getters ---
 
         // --- Setters ----
-        public int Card_ID{get{return car_id;}set{car_id=value;}}
+        public int Car_ID{get{return car_id;}set{car_id=value;}}
         public string Car_Make{get{return car_make;}set{car_make=value;}}
         public string Car_Model{get{return car_model;}set{car_model=value;}}
         public string Car_Vin{get{return car_vin;}set{car_vin=value;}}
@@ -38,6 +38,14 @@ namespace ORM{
             this.car_model = car_model;
             this.car_vin = car_vin;
             this.car_license_plate = car_license_plate;
+            this.car_price = car_price;
+        }
+
+        // Available Cars Constructor
+        public Car(int car_id, string car_model, string car_make, float car_price){
+            this.car_id = car_id;
+            this.car_model = car_model;
+            this.car_make = car_make;
             this.car_price = car_price;
         }
 
@@ -86,16 +94,8 @@ namespace ORM{
         }
 
         // --- End of Constructors
-
-
     }
 
-    /// <summary>
-    /// Class for holding the customers information
-    /// 2 Constructors
-    /// - Existing Customer: takes in an ID, Forename, Surname, Email and Phone Number
-    /// - New Customer: takes in a Forename, Surname, Email and Phone Number
-    /// </summary>
     class Customer{
         // Getters
         private int customer_id;

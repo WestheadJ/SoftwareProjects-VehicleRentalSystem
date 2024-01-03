@@ -1,0 +1,25 @@
+﻿<Properties StartupConfiguration="{D6920997-48B9-463A-B569-D617EEFE27EF}|Default">
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+  <MonoDevelop.Ide.Workbench ActiveDocument="Program.cs">
+    <Files>
+      <File FileName="Program.cs" Line="77" Column="52" />
+    </Files>
+    <Pads>
+      <Pad Id="ProjectPad">
+        <State name="__root__">
+          <Node name="SoftwareProjects-VehicleRentalSystem">
+            <Node name="SoftwareProjects-VehicleRentalSystem">
+              <Node name="Program.cs" selected="True" />
+            </Node>
+          </Node>
+        </State>
+      </Pad>
+    </Pads>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MultiItemStartupConfigurations />
+  <MonoDevelop.Ide.ItemProperties.SoftwareProjects-VehicleRentalSystem PreferredExecutionTarget="MonoDevelop.Default" />
+</Properties>

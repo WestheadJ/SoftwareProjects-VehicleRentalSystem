@@ -6,29 +6,44 @@ namespace Program
     class Program
     {
 
-
         public static void Main(string[] args)
         {
             string help = @"HELP MENU:
-    Args Formatting:
-        vrs command | args 
+    Command Formatting:
+        vrs -command | [type] args 
 
     Commands:
-        -help, help commands
-        -version, version
-        login | staff_id, staff_password = Used for logging in, used by any member of staff.
-        register | staff_id, staff,password, new_staff_forename, new_staff_surname, new_staff_email, new_staff_phone_number, is_admin= Used for registering, can only be used by an admin.
-        rent-car-new | staff_id, staff_password, car_id, customer_forename, customer_surname, customer_email, customer_phone_number, start_date, end_date = Rent a car with a new customer, used by any member of staff.
-        search-rented | staff_id, staff_password = Search for all rented cars = used by any member of staff. 
-        search-available | staff_id, staff_password = Search for all available to rent car = used by any member of staff.
-        search-staff-details | staff_id, staff_password, staff_id = Search for a member of staffs details = can only be used by an admin.
-        search-customer-details | staff_id, staff_password, customer_email = 
-        search-car-detail-license  | staff_id, staff_password, car_license_plate =
-        search-car-detail-vin  | staff_id, staff_password, car_vin = 
-        search-car-detail-id  | staff_id, staff_password, car_id =
-        add-car | staff_id, staff_password, car_id, car_model, car_make, car_vin, car_plate_number = used by any member of staff
-        remove-car | staff_id, staff_password, car_id = can only be used by an admin
-        remove-staff | staff_id, staff_password, staff_id = can only be used by an admin
+        -help = help commands
+
+        - help-admin = help commands for admins
+
+        -version = version
+
+        -login |[int] staff_id, [string] staff_password = Used for running multiple commands using an interface | Can be used by any member of staff.
+
+        -register | [int] staff_id, [string] staff,password, [string] new_staff_forename, [string] new_staff_surname, [string] new_staff_email, [long] new_staff_phone_number, [string] is_admin(yes/no) = Used for registering a new staff member | Can only be used by admins
+
+        -rent-car-new | [int] staff_id, [string] staff_password, [int] car_id, [string] customer_forename, [string] customer_surname, [string] customer_email, [long] customer_phone_number, [string] start_date, [string] end_date = Used to rent a car | Can be used by any member of staff
+
+        -search-rented | [int] staff_id, [string] staff_password = Used to search for all rented cars | Can be used by by any member of staff
+
+        -search-available | [int] staff_id, [string] staff_password = Used to search for all cars available to rent |  Can be used by any member of staff.
+
+        -search-staff-details | [int] staff_id, [string] staff_password, [string] staff_email = Used to search for a member of staffs details using their email | Can only be used by an admins
+
+        -search-customer-details | [int] staff_id, [string] staff_password, [string] customer_email = Used to search for a customers details | Can be used by any staff
+
+        -search-car-detail-license | [int] staff_id, [string] staff_password, [string] car_license_plate = Used to search for a cars details with the license plate | Can be used by any member of staff 
+
+        -search-car-detail-vin  | [int] staff_id, [string] staff_password, [string] car_vin = Used to search for a cars details with the VIN number | Can be used by any member of staff
+
+        -search-car-detail-id  | [id] staff_id, [string] staff_password, [int] car_id = Used to search for a cars details with the cars database ID | Can be used by any member of staff
+
+        -add-car | [int] staff_id, [string] staff_password, [string] car_model, [string] car_make, [string] car_vin, [string] car_plate_number = Used to add a new car to the database | Can only be used by admins
+
+        -remove-car | [int] staff_id, [string] staff_password, [int] car_id = Used to remove a car from the database | Can only be used by admins
+
+        -remove-staff | [int] staff_id, [string] staff_password, [int] staff_id = Used to remove a staff member from the database | Can only be used by admins
 
     Shorthands:
         -h = help 
@@ -47,6 +62,10 @@ namespace Program
         -rc = remove-car
         -rs = remove-staff";
 
+            Tuple<int, string> loggedInUser;
+
+            Dictionary<int, Car> availableCars = new Dictionary<int, Car>();
+
             try
             {
                 Database DB = new Database();
@@ -54,16 +73,21 @@ namespace Program
                 if (args.Length == 0) { Console.WriteLine("No arguments given!"); Help(); }
                 else
                 {
-                    if (args[0] == "help" || args[0] == "-h") { Help(); }
+                    if (args[0] == "-help" || args[0] == "-h") { Help(); }
                     // login | staff_id, staff_password
-                    else if (args[0] == "login" || args[0] == "-l")
-                    {
-                        Login(DB, Convert.ToInt32(args[1]), args[2]);
-                    }
+                    else if (args[0] == "-login" || args[0] == "-l") { Login(DB, Convert.ToInt32(args[1]), args[2]); }
                     // register | staff_id, staff,password, new_staff_forename, new_staff_surname, new_staff_email, new_staff_phone_number, is_admin
-                    else if (args[0] == "register" || args[0] == "-r") { RegisterShorthand(DB, Convert.ToInt32(args[1]), args[2], args[3], args[4], args[5], Convert.ToInt64(args[6]), args[7], args[8]); }
-                    // rent-car-new | staff_id, staff_password, car_id, customer_forename, customer_surname, customer_email, customer_phone_number, start_date, end_date 
-                    else if (args[0] == "rent-car-new" || args[0] == "-rcn") { RentCarShorthand(DB,Convert.ToInt32(args[1]),args[2],Convert.ToInt32(args[3]),new Customer(args[4],args[5],args[6],Convert.ToInt64(args[7])),args[8],args[9]);}
+
+                    else if (args[0] == "-register" || args[0] == "-r") { RegisterShorthand(DB, Convert.ToInt32(args[1]), args[2], args[3], args[4], args[5], Convert.ToInt64(args[6]), args[7], args[8]); }
+                    // rent-car-new | staff_id, staff_password, car_id, customer_forename, customer_surname, customer_email, customer_phone_number, start_date, end_date
+
+                    else if (args[0] == "-rent-car-new" || args[0] == "-rcn") { RentCarShorthand(DB, Convert.ToInt32(args[1]), args[2], Convert.ToInt32(args[3]), new Customer(args[4], args[5], args[6], Convert.ToInt64(args[7])), args[8], args[9]); }
+
+                    // -search-rented | [int] staff_id, [string] staff_password = Used to search for all rented cars | Can be used by by any member of staff
+                    else if (args[0] == "-search-rented" || args[0] == "-sr") { SearchRentedShorthand(DB); }
+
+                    // -search-available | [int] staff_id, [string] staff_password = Used to search for all cars available to rent |  Can be used by any member of staff.
+                    else if (args[0] == "-search-available" || args[0] == "-sa") { SearchAvailableShorthand(DB, Convert.ToInt32(args[1]), args[2]); }
 
                 }
             }
@@ -79,8 +103,10 @@ namespace Program
             void Login(Database DB, int staff_id, string staff_password)
             {
                 // If login successful
-                if (DB.Login(staff_id, staff_password))
+                Tuple<bool, int, string> login = DB.Login(staff_id, staff_password);
+                if (login.Item1)
                 {
+                    loggedInUser = new Tuple<int, string>(login.Item2, login.Item3);
                     Menu(new Dictionary<string, string> {
                         { "1", "Register a new user" },
                         { "2", "Rent a car" },
@@ -88,10 +114,9 @@ namespace Program
                     },
                     new List<Action> {
                         new Action(() => { Register(DB,staff_id,staff_password);}),
-                        new Action(()=>{RentCar(DB);}),
+                        new Action(()=>{    RentCar(DB);}),
                         new Action(() => { Help();})
                     });
-                    File.Delete("info.dat");
                 }
                 // If login unsuccessful
 
@@ -140,13 +165,14 @@ namespace Program
                 Console.WriteLine("Staff Password: ");
                 string admin_staff_password = Console.ReadLine();
 
-                Tuple<int, string> account_details = ReadStaffDetails();
-
-                if (admin_staff_id == account_details.Item1 && admin_staff_password == account_details.Item2)
+                if (admin_staff_id == loggedInUser.Item1 && admin_staff_password == loggedInUser.Item2)
                 {
                     DB.Register(admin_staff_id, admin_staff_password, new_staff_forename, new_staff_surname, new_staff_email, new_staff_phone_number, new_staff_password, is_admin);
                 }
-
+                else
+                {
+                    Console.WriteLine("Wrong details! Try again with the current logged in users details");
+                }
             }
 
             // register | staff_id, staff,password, new_staff_forename, new_staff_surname, new_staff_email, new_staff_phone_number, is_admin
@@ -173,8 +199,9 @@ namespace Program
             // rent-car-new | staff_id, staff_password, car_id, customer_forename, customer_surname, customer_email, customer_phone_number, start_date[yyyy-mm-dd], end_date[yyyy-mm-dd]
             void RentCarShorthand(Database DB, int staff_id, string staff_password, int car_id, Customer customer, string start_date_string, string end_date_string)
             {
+                Tuple<bool, int, string> login = DB.Login(staff_id, staff_password);
                 // Login
-                if (DB.Login(staff_id, staff_password))
+                if (login.Item1)
                 {
                     // Does the car exist
                     if (DB.GetCarByID(car_id).Item1)
@@ -183,36 +210,44 @@ namespace Program
                         if (DB.GetRentalAvailability(car_id, start_date_string, end_date_string))
                         {
                             // Does the customer exist
-                            Tuple<bool,List<Customer>> customer_details = DB.GetCustomerByEmail(customer.Customer_Email);
-                                // If not
-                                long customer_id;
-                                if(!customer_details.Item1){
-                                    customer_id=DB.CreateNewCustomer(customer);
-                                }
-                                else{customer_id =Convert.ToInt64(customer_details.Item2[0].Customer_ID);}
-                                DB.RentCar(car_id,customer_id,staff_id,start_date_string,end_date_string);
+                            Tuple<bool, List<Customer>> customer_details = DB.GetCustomerByEmail(customer.Customer_Email);
+                            // If not
+                            long customer_id;
+                            if (!customer_details.Item1)
+                            {
+                                customer_id = DB.CreateNewCustomer(customer);
+                            }
+                            else { customer_id = Convert.ToInt64(customer_details.Item2[0].Customer_ID); }
+                            DB.RentCar(car_id, customer_id, staff_id, start_date_string, end_date_string);
 
                         }
                     }
-                    else{
+                    else
+                    {
                         Console.WriteLine("Car does not exist!");
                     }
                 }
             }
 
-            void RentCar(Database DB){
-                Console.WriteLine("Enter the car id of the car you want to rent: ");
+            void RentCar(Database DB)
+            {
+
+                SearchAvailableShorthand(DB, loggedInUser.Item1, loggedInUser.Item2);
+
+                Console.WriteLine("\nEnter the car id of the car you want to rent: ");
                 Customer customer = new Customer();
 
                 int car_id = Convert.ToInt32(Console.ReadLine());
-                if(DB.GetCarByID(car_id).Item1){
+                if (DB.GetCarByID(car_id).Item1)
+                {
                     Console.WriteLine("Enter the start date in the format of: YYYY-MM-DD e.g 2023-12-25: ");
                     string start_date = Console.ReadLine();
-                    
+
                     Console.WriteLine("Enter the end date in the format of: YYYY-MM-DD e.g 2023-12-25: ");
                     string end_date = Console.ReadLine();
 
-                    if(DB.GetRentalAvailability(car_id,start_date,end_date)){
+                    if (DB.GetRentalAvailability(car_id, start_date, end_date))
+                    {
                         Console.WriteLine("Enter the customers forename: ");
                         customer.Customer_Forename = Console.ReadLine();
 
@@ -226,25 +261,24 @@ namespace Program
                         customer.Customer_Phone_Number = Convert.ToInt64(Console.ReadLine());
 
                         Console.WriteLine("Enter signed in account details:");
-                        
+
                         Console.WriteLine("Staff ID: ");
                         int admin_staff_id = Convert.ToInt32(Console.ReadLine());
                         Console.WriteLine("Staff Password: ");
                         string admin_staff_password = Console.ReadLine();
 
-                        Tuple<int, string> account_details = ReadStaffDetails();
-
-                        if (admin_staff_id == account_details.Item1 && admin_staff_password == account_details.Item2)
+                        if (admin_staff_id == loggedInUser.Item1 && admin_staff_password == loggedInUser.Item2)
                         {
-                             // Does the customer exist
-                            Tuple<bool,List<Customer>> customer_details = DB.GetCustomerByEmail(customer.Customer_Email);
-                                // If not
-                                long customer_id;
-                                if(!customer_details.Item1){
-                                    customer_id=DB.CreateNewCustomer(customer);
-                                }
-                                else{customer_id =Convert.ToInt64(customer_details.Item2[0].Customer_ID);}
-                                DB.RentCar(car_id,customer_id,admin_staff_id,start_date,end_date);
+                            // Does the customer exist
+                            Tuple<bool, List<Customer>> customer_details = DB.GetCustomerByEmail(customer.Customer_Email);
+                            // If not
+                            long customer_id;
+                            if (!customer_details.Item1)
+                            {
+                                customer_id = DB.CreateNewCustomer(customer);
+                            }
+                            else { customer_id = Convert.ToInt64(customer_details.Item2[0].Customer_ID); }
+                            DB.RentCar(car_id, customer_id, admin_staff_id, start_date, end_date);
                         }
                     }
                 }
@@ -254,24 +288,71 @@ namespace Program
 
             // ---  END Rent Car ---
 
+            // --- Search Rented ---
+
+             /// <summary>
+            /// Searches for all cars being rented
+            /// </summary>
+            /// <param name="DB">The database instance.</param>
+            /// <param name="staff_id">The staff ID for authentication.</param>
+            /// <param name="staff_password">The staff password for authentication.</param>
+            void SearchRentedShorthand(Database DB,int staff_id,string staff_password)
+            {
+                Tuple<bool, int, string> login = DB.Login(staff_id, staff_password);
+                if (login.Item1)
+                {
+                    // Print a list of available cars
+                    Console.WriteLine("List of cars being rented:");
+
+                    // Get all available cars from the database
+                    List<Car> cars = DB.GetAllRentedCars();
+
+                    // Print details of each available car
+                    foreach (var car in cars)
+                    {
+                        // Console.WriteLine("Car ID: {0}, Car Model: {1}, Car Make: {2}, Car Price Per Hour: {3}", car.Car_ID, car.Car_Model, car.Car_Make, car.Car_Price);
+                    }
+                }
+            }
+
+            /// <summary>
+            /// Searches for available cars in the database and prints their details.
+            /// </summary>
+            /// <param name="DB">The database instance.</param>
+            /// <param name="staff_id">The staff ID for authentication.</param>
+            /// <param name="staff_password">The staff password for authentication.</param>
+            void SearchAvailableShorthand(Database DB, int staff_id, string staff_password)
+            {
+                Tuple<bool, int, string> login = DB.Login(staff_id, staff_password);
+                if (login.Item1)
+                {
+                    // Print a list of available cars
+                    Console.WriteLine("List of available cars:");
+
+                    // Get all available cars from the database
+                    List<Car> cars = DB.GetAllAvailableCars();
+
+                    // Print details of each available car
+                    foreach (var car in cars)
+                    {
+                        Console.WriteLine("Car ID: {0}, Car Model: {1}, Car Make: {2}, Car Price Per Hour: {3}", car.Car_ID, car.Car_Model, car.Car_Make, car.Car_Price);
+                    }
+                }
+
+            }
+
+
+
+            void Search(Database DB)
+            {
+
+            }
+
             void Help()
             {
                 Console.WriteLine(help);
                 Console.WriteLine("Press a key to go back to the menu ->");
                 Console.Read();
-            }
-
-            Tuple<int, string> ReadStaffDetails()
-            {
-                var fs = File.Open("info.dat", FileMode.Open);
-                BinaryReader br = new BinaryReader(fs);
-                int staff_id;
-                string staff_password;
-                staff_id = br.ReadInt32();
-                staff_password = br.ReadString();
-                br.Close();
-                fs.Close();
-                return new Tuple<int, string>(staff_id, staff_password);
             }
 
             // --- Menu Methods --- 
@@ -333,5 +414,6 @@ namespace Program
 
             // --- END Menu Methods ---
         }
+
     }
 }

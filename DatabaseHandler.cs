@@ -9,7 +9,7 @@ namespace DatabaseHandler
     {
         public string database = "Data Source=vrs.db";
 
-        public bool Login(int staff_id, string staff_password)
+        public Tuple<bool,int,string> Login(int staff_id, string staff_password)
         {
             List<Staff> staff = new List<Staff>();
             using (var connection = new SqliteConnection(database))
@@ -28,12 +28,10 @@ namespace DatabaseHandler
             if (staff.Count() == 0)
             {
                 Console.WriteLine("Credentials were incorrect!");
-                return false;
+                return Tuple.Create(false,0,"");
             }
 
-            SaveDetails(staff_id, staff_password);
-            Console.WriteLine("Credentials were correct, details saved!");
-            return true;
+            return Tuple.Create(true,staff_id,staff_password);
         }
 
         public bool Register(int staff_id, string staff_password, string new_staff_forename, string new_staff_surname, string new_staff_email, long new_staff_phone_number, string new_staff_password, int is_admin)
@@ -109,6 +107,21 @@ namespace DatabaseHandler
 
         // --- GET Cars ---
 
+        /// <summary>
+        /// Get a cars details by it's ID
+        /// <param name="car_id"></param>
+        /// <para>Returns: <c>Tuple</c></para>
+        /// <list type="bullet">
+        /// <item>
+        /// <term>bool</term>
+        /// <description>Returns true if the car was found, returns false if the car wasn't found</description>
+        /// </item>
+        /// <item>
+        /// <term>List</term>
+        /// <description>A list of Car objects</description>
+        /// </item>
+        /// </list>
+        /// </summary>
         public Tuple<bool, List<Car>> GetCarByID(int car_id)
         {
             List<Car> cars = new List<Car>();
@@ -132,6 +145,21 @@ namespace DatabaseHandler
             return Tuple.Create(true, cars);
         }
 
+        /// <summary>
+        /// Get a cars details by it's VIN number
+        /// <param name="car_vin"></param>
+        /// <para>Returns: Tuple</para>
+        /// <list type="bullet">
+        /// <item>
+        /// <term>bool</term>
+        /// <description>Returns true if the car was found, returns false if the car wasn't found</description>
+        /// </item>
+        /// <item>
+        /// <term>List</term>
+        /// <description>A list of Car objects</description>
+        /// </item>
+        /// </list>
+        /// </summary>
         public Tuple<bool, List<Car>> GetCarByVIN(string car_vin)
         {
             List<Car> cars = new List<Car>();
@@ -155,6 +183,21 @@ namespace DatabaseHandler
             return Tuple.Create(true, cars);
         }
 
+    /// <summary>
+        /// Get a cars details by it's license plate
+        /// <param name="car_license_plate"></param>
+        /// <para>Returns: <c>Tuple</c></para>
+        /// <list type="bullet">
+        /// <item>
+        /// <term>bool</term>
+        /// <description>Returns true if the car was found, returns false if the car wasn't found</description>
+        /// </item>
+        /// <item>
+        /// <term>List</term>
+        /// <description>A list of Car objects</description>
+        /// </item>
+        /// </list>
+        /// </summary>
         public Tuple<bool, List<Car>> GetCarByLicensePlate(string car_license_plate)
         {
             List<Car> cars = new List<Car>();
@@ -178,6 +221,19 @@ namespace DatabaseHandler
             return Tuple.Create(true, cars);
         }
 
+        /// <summary>
+        /// Get a cars availability for rental
+        /// <param name="car_id"></param>
+        /// <param name="start_date"></param>
+        /// <param name="end_date"></param>
+        /// <para>Returns: <c>bool</c></para>
+        /// <list type="bullet">
+        /// <item>
+        /// <term>bool</term>
+        /// <description>Returns true if the car is available, returns false if the car isn't available</description>
+        /// </item>
+        /// </list>
+        /// </summary>
         public bool GetRentalAvailability(int car_id, string start_date, string end_date)
         {
             List<int> results = new List<int>(1);
@@ -205,10 +261,16 @@ namespace DatabaseHandler
         }
 
         /// <summary>
-        /// Get the price rate of a car
+        /// Get a cars price per hour
+        /// <param name="car_id"></param>
+        /// <para>Returns: <c>float</c></para>
+        /// <list type="bullet">
+        /// <item>
+        /// <term>float</term>
+        /// <description>The price of the car per hour</description>
+        /// </item>
+        /// </list>
         /// </summary>
-        /// <param name="car_id">The cars' ID</param>
-        /// <returns><c>float</c>: price rate</returns>
         public float GetCarPrice(int car_id){
             float price = 0;
             using (var connection = new SqliteConnection(database))
@@ -226,6 +288,38 @@ namespace DatabaseHandler
             }
             return price;
         }
+
+        public List<Car> GetAllRentedCars(){
+            
+        }
+
+        /// <summary>
+        /// Get a list of cars that are available to rent
+        /// <para>Returns: <c>List</c></para>
+        /// <list type="bullet">
+        /// <item>
+        /// <term>List</term>
+        /// <description>Returns a list of Car objects</description>
+        /// </item>
+        /// </list>
+        /// </summary>
+        public List<Car> GetAllAvailableCars(){
+            List<Car> availableCars = new List<Car>();
+            using (var connection = new SqliteConnection(database))
+            {
+                connection.Open();
+                var command = connection.CreateCommand();
+                command.CommandText = "SELECT Cars.car_id, Cars.car_model, Cars.car_make, Cars.car_price_per_hour FROM cars LEFT JOIN rentals ON cars.car_id = rentals.car_id WHERE (rentals.rental_start_date > date('now') OR rentals.rental_start_date IS NULL) OR (rentals.rental_end_date < date('now') OR rentals.rental_end_date IS NULL);";
+                SqliteDataReader reader = command.ExecuteReader();
+                while (reader.Read())
+                {
+                    availableCars.Add(new Car(Convert.ToInt32(reader["car_id"]), reader["car_model"].ToString(), reader["car_make"].ToString(), float.Parse(reader["car_price_per_hour"].ToString())));
+                }
+                connection.Close();
+
+            }
+            return availableCars;
+            }
 
         // --- END GET Cars ---
 
@@ -333,17 +427,7 @@ namespace DatabaseHandler
             }
             return customer_id;
         }
-
-        // Writes login details of current user
-        void SaveDetails(int staff_id, string staff_password)
-        {
-            FileStream fs = File.Open("info.dat", FileMode.Create);
-            BinaryWriter bw = new BinaryWriter(fs);
-            bw.Write(staff_id);
-            bw.Write(staff_password);
-            bw.Close();
-            fs.Close();
         }
 
-    }
+    
 }
