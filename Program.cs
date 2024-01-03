@@ -84,7 +84,7 @@ namespace Program
                     else if (args[0] == "-rent-car-new" || args[0] == "-rcn") { RentCarShorthand(DB, Convert.ToInt32(args[1]), args[2], Convert.ToInt32(args[3]), new Customer(args[4], args[5], args[6], Convert.ToInt64(args[7])), args[8], args[9]); }
 
                     // -search-rented | [int] staff_id, [string] staff_password = Used to search for all rented cars | Can be used by by any member of staff
-                    else if (args[0] == "-search-rented" || args[0] == "-sr") { SearchRentedShorthand(DB); }
+                    else if (args[0] == "-search-rented" || args[0] == "-sr") { SearchRentedShorthand(DB,Convert.ToInt32(args[1]),args[2]); }
 
                     // -search-available | [int] staff_id, [string] staff_password = Used to search for all cars available to rent |  Can be used by any member of staff.
                     else if (args[0] == "-search-available" || args[0] == "-sa") { SearchAvailableShorthand(DB, Convert.ToInt32(args[1]), args[2]); }
@@ -305,12 +305,12 @@ namespace Program
                     Console.WriteLine("List of cars being rented:");
 
                     // Get all available cars from the database
-                    List<Car> cars = DB.GetAllRentedCars();
+                    List<RentedCar> cars = DB.GetAllRentedCars();
 
                     // Print details of each available car
                     foreach (var car in cars)
                     {
-                        // Console.WriteLine("Car ID: {0}, Car Model: {1}, Car Make: {2}, Car Price Per Hour: {3}", car.Car_ID, car.Car_Model, car.Car_Make, car.Car_Price);
+                        Console.WriteLine("Car ID: {0}, Car Model: {1}, Car Make: {2}, Rental Period: {3} to {4}", car.Car_ID, car.Car_Model, car.Car_Make, car.Rental_Start_Date,car.Rental_End_Date);
                     }
                 }
             }

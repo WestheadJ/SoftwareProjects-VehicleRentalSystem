@@ -81,10 +81,18 @@ namespace DatabaseHandler
                 TimeSpan difference = end_date - start_date;
                 int total_hours = (int)difference.TotalHours;
                 price = (float)(total_hours * GetCarPrice(car_id));
+                Console.WriteLine("Price: " + price);
             }
             else{
                 return false;
-            }            
+            }
+
+            Console.WriteLine("Still want to go through the rental request?");
+            if(Console.ReadLine().ToLower() != "yes"){
+                    return false;
+            }
+
+            Console.WriteLine("Renting:");
             using (var connection = new SqliteConnection(database))
             {
                 connection.Open();
@@ -289,8 +297,22 @@ namespace DatabaseHandler
             return price;
         }
 
-        public List<Car> GetAllRentedCars(){
-            
+        public List<RentedCar> GetAllRentedCars(){
+            List<RentedCar> rentedCars = new List<RentedCar>();
+            using (var connection = new SqliteConnection(database))
+            {
+                connection.Open();
+                var command = connection.CreateCommand();
+                command.CommandText = "SELECT cars.car_id, cars.car_model, cars.car_make, rental_start_date, rental_end_date FROM cars JOIN rentals ON cars.car_id = rentals.car_id WHERE date('now') BETWEEN rentals.rental_start_date AND rentals.rental_end_date;";
+                SqliteDataReader reader = command.ExecuteReader();
+                while (reader.Read())
+                {
+                    rentedCars.Add(new RentedCar(Convert.ToInt32(reader["car_id"]), reader["car_model"].ToString(), reader["car_make"].ToString(), reader["rental_start_date"].ToString(), reader["rental_end_date"].ToString() ));
+                }
+                connection.Close();
+
+            }
+            return rentedCars;
         }
 
         /// <summary>

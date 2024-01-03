@@ -1,9 +1,9 @@
 namespace ORM{
     class Car{
         // --- Getters ---
-        private int car_id;
-        private string car_make;
-        private string car_model;
+        protected int car_id;
+        protected string car_make;
+        protected string car_model;
         private string car_vin;
         private string car_license_plate;
         private float car_price;
@@ -49,7 +49,27 @@ namespace ORM{
             this.car_price = car_price;
         }
 
+        public Car(){
+            
+        }
         // --- End of Constructors
+    }
+
+    class RentedCar : Car {
+        private string rental_start_date;
+        private string rental_end_date;
+
+        public string Rental_Start_Date{get{return rental_start_date;}set{rental_start_date = value;}}
+        public string Rental_End_Date{get{return rental_end_date;}set{rental_end_date=value;}}
+
+        // --- Constructors --- 
+            public RentedCar(int car_id, string car_model,string car_make, string rental_start_date, string rental_end_date){
+            this.car_id = car_id;
+            this.car_model = car_model;
+            this.car_make = car_make;
+            this.rental_start_date = rental_start_date;
+            this.rental_end_date = rental_end_date;
+        }
     }
 
     class Staff {
