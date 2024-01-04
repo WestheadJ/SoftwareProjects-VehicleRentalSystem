@@ -110,12 +110,18 @@ namespace Program
                     Menu(new Dictionary<string, string> {
                         { "1", "Register a new user" },
                         { "2", "Rent a car" },
-                        { "3", "Help list"}
+                        { "3", "Search All Rented Cars"},
+                        { "4", "Search All Available Cars"},
+                        { "5", "Help list"},
+                        { "6", "Quit"}
                     },
                     new List<Action> {
                         new Action(() => { Register(DB,staff_id,staff_password);}),
-                        new Action(()=>{    RentCar(DB);}),
-                        new Action(() => { Help();})
+                        new Action(()=>{ RentCar(DB);}),
+                        new Action(()=>{ SearchRentedShorthand(DB,staff_id,staff_password);}),
+                        new Action(()=>{ SearchAvailableShorthand(DB,staff_id,staff_password);}),
+                        new Action(() => { Help();}),
+                        new Action(()=>{ System.Environment.Exit(0);})
                     });
                 }
                 // If login unsuccessful
@@ -189,7 +195,7 @@ namespace Program
                     new_staff_is_admin = 0;
                 }
                 DB.Register(staff_id, staff_password, new_staff_forename, new_staff_surname, new_staff_email, new_staff_phone_number, new_staff_password, new_staff_is_admin);
-
+                
             }
 
             // ---- END Register ----
@@ -385,6 +391,7 @@ namespace Program
                     }
                     else if (key.Key == ConsoleKey.Enter)
                     {
+                        Console.Clear();
                         actions[position]();
                     }
                     Render(options, position);
@@ -403,10 +410,11 @@ namespace Program
 
                         Console.Write(count + 1 + ". " + options[(count + 1).ToString()]);
                         Console.ResetColor();
+                        Console.Write("\n");
                     }
                     else
                     {
-                        Console.WriteLine("\n" + (count + 1) + ". " + options[(count + 1).ToString()]);
+                        Console.WriteLine((count + 1) + ". " + options[(count + 1).ToString()]);
                         Console.ResetColor();
                     }
                 }

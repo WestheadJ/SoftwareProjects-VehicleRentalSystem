@@ -297,6 +297,16 @@ namespace DatabaseHandler
             return price;
         }
 
+        /// <summary>
+        ///  Gets all the cars being rented currently
+        ///  <para>Returns: <c>List</c></para>
+        /// <list type="bullet">
+        /// <item>
+        /// <term>List</term>
+        /// <description> A list of RentedCar objects</description>
+        /// </item>
+        /// </list>
+        /// </summary>
         public List<RentedCar> GetAllRentedCars(){
             List<RentedCar> rentedCars = new List<RentedCar>();
             using (var connection = new SqliteConnection(database))

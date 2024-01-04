@@ -50,11 +50,12 @@ namespace ORM{
         }
 
         public Car(){
-            
+
         }
         // --- End of Constructors
     }
 
+    
     class RentedCar : Car {
         private string rental_start_date;
         private string rental_end_date;
