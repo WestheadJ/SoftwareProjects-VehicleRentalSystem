@@ -9,7 +9,7 @@ namespace DatabaseHandler
     {
         public string database = "Data Source=vrs.db";
 
-        public Tuple<bool,int,string> Login(int staff_id, string staff_password)
+        public Tuple<bool, int, string> Login(int staff_id, string staff_password)
         {
             List<Staff> staff = new List<Staff>();
             using (var connection = new SqliteConnection(database))
@@ -28,27 +28,18 @@ namespace DatabaseHandler
             if (staff.Count() == 0)
             {
                 Console.WriteLine("Credentials were incorrect!");
-                return Tuple.Create(false,0,"");
+                return Tuple.Create(false, 0, "");
             }
 
-            return Tuple.Create(true,staff_id,staff_password);
+            return Tuple.Create(true, staff_id, staff_password);
         }
 
         public bool Register(int staff_id, string staff_password, string new_staff_forename, string new_staff_surname, string new_staff_email, long new_staff_phone_number, string new_staff_password, int is_admin)
         {
-            List<Staff> staff = new List<Staff>();
-            using (var connection = new SqliteConnection(database))
-            {
-                connection.Open();
-                var command = connection.CreateCommand();
-                command.CommandText = "SELECT * FROM Staff WHERE staff_id=" + staff_id + " AND staff_password=" + staff_password;
-                SqliteDataReader reader = command.ExecuteReader();
-                while (reader.Read())
-                {
-                    staff.Add(new Staff(Convert.ToInt32(reader["staff_id"].ToString()), reader["staff_forename"].ToString(), reader["staff_surname"].ToString()));
-                }
-                connection.Close();
 
+            if (!IsAdmin(staff_id, staff_password))
+            {
+                return false;
             }
 
             using (var connection = new SqliteConnection(database))
@@ -76,20 +67,23 @@ namespace DatabaseHandler
             DateTime start_date;
             DateTime end_date;
             // GET THE DATE TIME TO CHECK THE HOURS
-            if(DateTime.TryParseExact(start_date_string, "yyyy-MM-dd", null, System.Globalization.DateTimeStyles.None, out start_date)
-            &&DateTime.TryParseExact(end_date_string, "yyyy-MM-dd", null, System.Globalization.DateTimeStyles.None, out end_date)){
+            if (DateTime.TryParseExact(start_date_string, "yyyy-MM-dd", null, System.Globalization.DateTimeStyles.None, out start_date)
+            && DateTime.TryParseExact(end_date_string, "yyyy-MM-dd", null, System.Globalization.DateTimeStyles.None, out end_date))
+            {
                 TimeSpan difference = end_date - start_date;
                 int total_hours = (int)difference.TotalHours;
                 price = (float)(total_hours * GetCarPrice(car_id));
                 Console.WriteLine("Price: " + price);
             }
-            else{
+            else
+            {
                 return false;
             }
 
             Console.WriteLine("Still want to go through the rental request?");
-            if(Console.ReadLine().ToLower() != "yes"){
-                    return false;
+            if (Console.ReadLine().ToLower() != "yes")
+            {
+                return false;
             }
 
             Console.WriteLine("Renting:");
@@ -99,18 +93,16 @@ namespace DatabaseHandler
                 var command = connection.CreateCommand();
                 command.CommandText = "INSERT INTO Rentals(car_id,customer_id,staff_id,rental_start_date,rental_end_date,rental_cost) VALUES(@car_id,@customer_id,@staff_id,@start_date,@end_date,@cost)";
                 command.Parameters.AddWithValue("@car_id", car_id);
-                command.Parameters.AddWithValue("@customer_id",customer_id);
+                command.Parameters.AddWithValue("@customer_id", customer_id);
                 command.Parameters.AddWithValue("@staff_id", staff_id);
                 command.Parameters.AddWithValue("@start_date", start_date_string);
                 command.Parameters.AddWithValue("@end_date", end_date_string);
-                command.Parameters.AddWithValue("@cost", price);
+                command.Parameters.AddWithValue("@cost", Math.Round(price, 2));
                 command.Prepare();
                 command.ExecuteNonQuery();
                 connection.Close();
             }
             return true;
-
-
         }
 
         // --- GET Cars ---
@@ -191,7 +183,7 @@ namespace DatabaseHandler
             return Tuple.Create(true, cars);
         }
 
-    /// <summary>
+        /// <summary>
         /// Get a cars details by it's license plate
         /// <param name="car_license_plate"></param>
         /// <para>Returns: <c>Tuple</c></para>
@@ -206,9 +198,9 @@ namespace DatabaseHandler
         /// </item>
         /// </list>
         /// </summary>
-        public Tuple<bool, List<Car>> GetCarByLicensePlate(string car_license_plate)
+        public Tuple<bool, Car> GetCarByLicensePlate(string car_license_plate)
         {
-            List<Car> cars = new List<Car>();
+            Car car = new Car();
             using (var connection = new SqliteConnection(database))
             {
                 connection.Open();
@@ -217,16 +209,16 @@ namespace DatabaseHandler
                 SqliteDataReader reader = command.ExecuteReader();
                 while (reader.Read())
                 {
-                    cars.Add(new Car(Convert.ToInt32(reader["car_id"].ToString()), reader["car_make"].ToString(), reader["car_model"].ToString(), reader["car_vin"].ToString(), reader["car_license_plate"].ToString(), float.Parse(reader["car_price_per_hour"].ToString())));
+                    car = new Car(Convert.ToInt32(reader["car_id"].ToString()), reader["car_make"].ToString(), reader["car_model"].ToString(), reader["car_vin"].ToString(), reader["car_license_plate"].ToString(), float.Parse(reader["car_price_per_hour"].ToString()));
                 }
                 connection.Close();
 
             }
-            if (cars.Count() == 0)
+            if (car.Car_Model == "")
             {
-                return Tuple.Create(false, cars);
+                return Tuple.Create(false, car);
             }
-            return Tuple.Create(true, cars);
+            return Tuple.Create(true, car);
         }
 
         /// <summary>
@@ -279,7 +271,8 @@ namespace DatabaseHandler
         /// </item>
         /// </list>
         /// </summary>
-        public float GetCarPrice(int car_id){
+        public float GetCarPrice(int car_id)
+        {
             float price = 0;
             using (var connection = new SqliteConnection(database))
             {
@@ -307,7 +300,8 @@ namespace DatabaseHandler
         /// </item>
         /// </list>
         /// </summary>
-        public List<RentedCar> GetAllRentedCars(){
+        public List<RentedCar> GetAllRentedCars()
+        {
             List<RentedCar> rentedCars = new List<RentedCar>();
             using (var connection = new SqliteConnection(database))
             {
@@ -317,7 +311,7 @@ namespace DatabaseHandler
                 SqliteDataReader reader = command.ExecuteReader();
                 while (reader.Read())
                 {
-                    rentedCars.Add(new RentedCar(Convert.ToInt32(reader["car_id"]), reader["car_model"].ToString(), reader["car_make"].ToString(), reader["rental_start_date"].ToString(), reader["rental_end_date"].ToString() ));
+                    rentedCars.Add(new RentedCar(Convert.ToInt32(reader["car_id"]), reader["car_model"].ToString(), reader["car_make"].ToString(), reader["rental_start_date"].ToString(), reader["rental_end_date"].ToString()));
                 }
                 connection.Close();
 
@@ -335,7 +329,8 @@ namespace DatabaseHandler
         /// </item>
         /// </list>
         /// </summary>
-        public List<Car> GetAllAvailableCars(){
+        public List<Car> GetAllAvailableCars()
+        {
             List<Car> availableCars = new List<Car>();
             using (var connection = new SqliteConnection(database))
             {
@@ -351,7 +346,7 @@ namespace DatabaseHandler
 
             }
             return availableCars;
-            }
+        }
 
         // --- END GET Cars ---
 
@@ -380,9 +375,9 @@ namespace DatabaseHandler
             return Tuple.Create(true, customers);
         }
 
-        public Tuple<bool, List<Customer>> GetCustomerByEmail(string customer_email)
+        public Tuple<bool, Customer> GetCustomerByEmail(string customer_email)
         {
-            List<Customer> customers = new List<Customer>();
+            Customer customerDetails = new Customer();
             using (var connection = new SqliteConnection(database))
             {
                 connection.Open();
@@ -391,16 +386,16 @@ namespace DatabaseHandler
                 SqliteDataReader reader = command.ExecuteReader();
                 while (reader.Read())
                 {
-                    customers.Add(new Customer(Convert.ToInt32(reader["customer_id"].ToString()), reader["customer_forename"].ToString(), reader["customer_surname"].ToString(), reader["customer_email"].ToString(), Convert.ToInt64(reader["customer_phone_number"].ToString())));
+                    customerDetails = new Customer(Convert.ToInt32(reader["customer_id"].ToString()), reader["customer_forename"].ToString(), reader["customer_surname"].ToString(), reader["customer_email"].ToString(), Convert.ToInt64(reader["customer_phone_number"].ToString()));
                 }
                 connection.Close();
 
             }
-            if (customers.Count() == 0)
+            if (customerDetails.Customer_Email == "")
             {
-                return Tuple.Create(false, customers);
+                return Tuple.Create(false, customerDetails);
             }
-            return Tuple.Create(true, customers);
+            return Tuple.Create(true, customerDetails);
         }
 
         public Tuple<bool, List<Customer>> GetCustomerByPhoneNumber(long customer_phone_number)
@@ -426,7 +421,50 @@ namespace DatabaseHandler
             return Tuple.Create(true, customers);
         }
 
+        public List<RentedCar> GetCustomersRentals(int customer_id)
+        {
+            List<RentedCar> cars = new List<RentedCar>(5);
+            using (var connection = new SqliteConnection(database))
+            {
+                connection.Open();
+                var command = connection.CreateCommand();
+                command.CommandText = "SELECT * FROM Cars JOIN Rentals ON Cars.car_id = Rentals.car_id JOIN Customers ON Rentals.customer_id = Customers.customer_id WHERE Customers.customer_id = 2;";
+
+                SqliteDataReader reader = command.ExecuteReader();
+                while (reader.Read())
+                {
+                    cars.Add(new(Convert.ToInt32(reader["rental_id"]), Convert.ToInt32(reader["car_id"]), reader["car_model"].ToString(), reader["car_make"].ToString(), reader["car_vin"].ToString(), reader["car_license_plate"].ToString(), reader["rental_start_date"].ToString(), reader["rental_end_date"].ToString(), float.Parse(reader["rental_cost"].ToString())));
+                }
+                return cars;
+            }
+        }
+
         // --- END GET Customers ---
+
+        // --- GET Staff ---
+
+        public Tuple<bool, Staff> GetStaffDetails(string staff_email)
+        {
+            Staff staff_member = new Staff();
+
+            using (var connection = new SqliteConnection(database))
+            {
+                connection.Open();
+                var command = connection.CreateCommand();
+                command.CommandText = $"SELECT * FROM Staff WHERE staff_email= '{staff_email}';";
+                SqliteDataReader reader = command.ExecuteReader();
+                while (reader.Read())
+                {
+                    staff_member = new Staff(Convert.ToInt32(reader["staff_id"].ToString()), reader["staff_forename"].ToString(), reader["staff_surname"].ToString(), reader["staff_email"].ToString(), reader["staff_password"].ToString(), Convert.ToInt64(reader["staff_phone_number"]), Convert.ToInt32(reader["is_admin"].ToString()));
+                }
+
+                if (staff_member.Staff_Forename == "")
+                {
+                    return Tuple.Create(false, staff_member);
+                }
+                return Tuple.Create(true, staff_member);
+            }
+        }
 
         public int CreateNewCustomer(Customer new_customer)
         {
@@ -459,7 +497,29 @@ namespace DatabaseHandler
             }
             return customer_id;
         }
+
+        public bool IsAdmin(int staff_id, string staff_password)
+        {
+            List<Staff> staff = new List<Staff>();
+            using (var connection = new SqliteConnection(database))
+            {
+                connection.Open();
+                var command = connection.CreateCommand();
+                command.CommandText = "SELECT * FROM Staff WHERE staff_id=" + staff_id + " AND staff_password=" + staff_password;
+                SqliteDataReader reader = command.ExecuteReader();
+                while (reader.Read())
+                {
+                    staff.Add(new Staff(Convert.ToInt32(reader["staff_id"].ToString()), reader["staff_forename"].ToString(), reader["staff_surname"].ToString()));
+                }
+                connection.Close();
+            }
+
+            if (staff.Count == 0)
+            {
+                return false;
+            }
+            return true;
         }
 
-    
+    }
 }

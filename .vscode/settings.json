@@ -1,0 +1,15 @@
+{
+    "editor.formatOnSave": true,
+    "editor.formatOnPaste": true,
+    "editor.fontFamily": "Lexend",
+    "editor.wordWrap": "on",
+    "editor.unusualLineTerminators": "auto",
+    "editor.unicodeHighlight.nonBasicASCII": true,
+    "editor.fontSize": 14,
+    "editor.codeLensFontFamily": "OpenDyslexic",
+    "workbench.fontAliasing": "antialiased",
+    "debug.console.fontFamily": "OpenDyslexic",
+    "debug.console.fontSize": 14,
+    "terminal.integrated.fontFamily": "monospace",
+    "terminal.integrated.fontSize": 13
+}

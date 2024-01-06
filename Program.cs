@@ -84,11 +84,19 @@ namespace Program
                     else if (args[0] == "-rent-car-new" || args[0] == "-rcn") { RentCarShorthand(DB, Convert.ToInt32(args[1]), args[2], Convert.ToInt32(args[3]), new Customer(args[4], args[5], args[6], Convert.ToInt64(args[7])), args[8], args[9]); }
 
                     // -search-rented | [int] staff_id, [string] staff_password = Used to search for all rented cars | Can be used by by any member of staff
-                    else if (args[0] == "-search-rented" || args[0] == "-sr") { SearchRentedShorthand(DB,Convert.ToInt32(args[1]),args[2]); }
+                    else if (args[0] == "-search-rented" || args[0] == "-sr") { SearchRentedShorthand(DB, Convert.ToInt32(args[1]), args[2]); }
 
                     // -search-available | [int] staff_id, [string] staff_password = Used to search for all cars available to rent |  Can be used by any member of staff.
                     else if (args[0] == "-search-available" || args[0] == "-sa") { SearchAvailableShorthand(DB, Convert.ToInt32(args[1]), args[2]); }
 
+                    else if (args[0] == "-search-staff-details" || args[0] == "-ssd") { SearchStaffDetailsShorthand(DB, Convert.ToInt32(args[1]), args[2], args[3]); }
+
+                    // -search - customer - details | [int] staff_id, [string] staff_password, [string] customer_email = Used to search for a customers details | Can be used by any staff
+                    else if (args[0] == "-search-customer-details" || args[0] == "-scd") { SearchCustomerDetailsByEmailShorthand(DB, Convert.ToInt32(args[1]), args[2], args[3]); }
+                    else
+                    {
+                        ExitMessage($"Invalid Command :{args[0]} | use -help for a list of commands!");
+                    }
                 }
             }
             catch (IndexOutOfRangeException)
@@ -108,20 +116,28 @@ namespace Program
                 {
                     loggedInUser = new Tuple<int, string>(login.Item2, login.Item3);
                     Menu(new Dictionary<string, string> {
-                        { "1", "Register a new user" },
+                        { "1", "Register a new user (Admin Only)" },
                         { "2", "Rent a car" },
                         { "3", "Search All Rented Cars"},
                         { "4", "Search All Available Cars"},
-                        { "5", "Help list"},
-                        { "6", "Quit"}
+                        {"5","Search Staff Details (Admin Only)"},
+                        { "6", "Help list"},
+                        { "7", "Quit"}
                     },
                     new List<Action> {
-                        new Action(() => { Register(DB,staff_id,staff_password);}),
+                        // 1
+                        new Action(() => { Register(DB,staff_id,staff_password); }),
+                        // 2
                         new Action(()=>{ RentCar(DB);}),
-                        new Action(()=>{ SearchRentedShorthand(DB,staff_id,staff_password);}),
-                        new Action(()=>{ SearchAvailableShorthand(DB,staff_id,staff_password);}),
-                        new Action(() => { Help();}),
-                        new Action(()=>{ System.Environment.Exit(0);})
+                        // 3 
+                        new Action(()=>{ SearchRentedShorthand(DB,staff_id,staff_password); }),
+                        // 4
+                        new Action(()=>{ SearchAvailableShorthand(DB,staff_id,staff_password); }),
+                        // 5
+                        new Action(()=>{ SearchStaffDetails(DB); }),
+
+                        new Action(() => { Help(); }),
+                        new Action(()=>{ System.Environment.Exit(0); })
                     });
                 }
                 // If login unsuccessful
@@ -195,7 +211,7 @@ namespace Program
                     new_staff_is_admin = 0;
                 }
                 DB.Register(staff_id, staff_password, new_staff_forename, new_staff_surname, new_staff_email, new_staff_phone_number, new_staff_password, new_staff_is_admin);
-                
+
             }
 
             // ---- END Register ----
@@ -216,16 +232,15 @@ namespace Program
                         if (DB.GetRentalAvailability(car_id, start_date_string, end_date_string))
                         {
                             // Does the customer exist
-                            Tuple<bool, List<Customer>> customer_details = DB.GetCustomerByEmail(customer.Customer_Email);
+                            Tuple<bool, Customer> customerDetails = DB.GetCustomerByEmail(customer.Customer_Email);
                             // If not
                             long customer_id;
-                            if (!customer_details.Item1)
+                            if (!customerDetails.Item1)
                             {
                                 customer_id = DB.CreateNewCustomer(customer);
                             }
-                            else { customer_id = Convert.ToInt64(customer_details.Item2[0].Customer_ID); }
+                            else { customer_id = Convert.ToInt64(customerDetails.Item2.Customer_ID); }
                             DB.RentCar(car_id, customer_id, staff_id, start_date_string, end_date_string);
-
                         }
                     }
                     else
@@ -276,14 +291,14 @@ namespace Program
                         if (admin_staff_id == loggedInUser.Item1 && admin_staff_password == loggedInUser.Item2)
                         {
                             // Does the customer exist
-                            Tuple<bool, List<Customer>> customer_details = DB.GetCustomerByEmail(customer.Customer_Email);
+                            Tuple<bool, Customer> customer_details = DB.GetCustomerByEmail(customer.Customer_Email);
                             // If not
                             long customer_id;
                             if (!customer_details.Item1)
                             {
                                 customer_id = DB.CreateNewCustomer(customer);
                             }
-                            else { customer_id = Convert.ToInt64(customer_details.Item2[0].Customer_ID); }
+                            else { customer_id = Convert.ToInt64(customer_details.Item2.Customer_ID); }
                             DB.RentCar(car_id, customer_id, admin_staff_id, start_date, end_date);
                         }
                     }
@@ -294,15 +309,15 @@ namespace Program
 
             // ---  END Rent Car ---
 
-            // --- Search Rented ---
+            // --- Searches ---
 
-             /// <summary>
+            /// <summary>
             /// Searches for all cars being rented
             /// </summary>
             /// <param name="DB">The database instance.</param>
             /// <param name="staff_id">The staff ID for authentication.</param>
             /// <param name="staff_password">The staff password for authentication.</param>
-            void SearchRentedShorthand(Database DB,int staff_id,string staff_password)
+            void SearchRentedShorthand(Database DB, int staff_id, string staff_password)
             {
                 Tuple<bool, int, string> login = DB.Login(staff_id, staff_password);
                 if (login.Item1)
@@ -316,9 +331,11 @@ namespace Program
                     // Print details of each available car
                     foreach (var car in cars)
                     {
-                        Console.WriteLine("Car ID: {0}, Car Model: {1}, Car Make: {2}, Rental Period: {3} to {4}", car.Car_ID, car.Car_Model, car.Car_Make, car.Rental_Start_Date,car.Rental_End_Date);
+                        Console.WriteLine("Car ID: {0}, Car Model: {1}, Car Make: {2}, Rental Period: {3} to {4}", car.Car_ID, car.Car_Model, car.Car_Make, car.Rental_Start_Date, car.Rental_End_Date);
                     }
                 }
+                Console.WriteLine("Enter any key to go back...");
+                Console.Read();
             }
 
             /// <summary>
@@ -344,21 +361,138 @@ namespace Program
                         Console.WriteLine("Car ID: {0}, Car Model: {1}, Car Make: {2}, Car Price Per Hour: {3}", car.Car_ID, car.Car_Model, car.Car_Make, car.Car_Price);
                     }
                 }
+                Console.WriteLine("Enter any key to go back...");
+                Console.Read();
+            }
+
+            void SearchStaffDetailsShorthand(Database DB, int staff_id, string staff_password, string staff_email)
+            {
+                Tuple<bool, int, string> login = DB.Login(staff_id, staff_password);
+                if (!login.Item1)
+                {
+                    ExitMessage("Incorrect Details!");
+                }
+                bool isAdmin = DB.IsAdmin(staff_id, staff_password);
+                if (!isAdmin)
+                {
+                    ExitMessage("You need to be an admin to use this command!");
+                }
+                else
+                {
+                    Tuple<bool, Staff> result = DB.GetStaffDetails(staff_email);
+                    if (result.Item1 == true)
+                    {
+                        Staff staffDetails = result.Item2;
+                        Console.WriteLine($"{staffDetails.Staff_Forename} {staffDetails.Staff_Surname}'s Details:");
+                        Console.WriteLine("ID: " + staffDetails.Staff_ID);
+                        Console.WriteLine("Password: " + staffDetails.Staff_Password);
+                        Console.WriteLine("Forename: " + staffDetails.Staff_Forename);
+                        Console.WriteLine("Surname: " + staffDetails.Staff_Surname);
+                        Console.WriteLine("Email: " + staffDetails.Staff_Email);
+                        ExitMessage("Phone Number: " + staffDetails.Staff_Phone_Number);
+                    }
+                    else
+                    {
+                        ExitMessage("That user cannot be found!");
+
+                    }
+                }
 
             }
 
+            void SearchStaffDetails(Database DB)
+            {
+                bool isAdmin = DB.IsAdmin(loggedInUser.Item1, loggedInUser.Item2);
+                if (!isAdmin)
+                {
+                    ExitMessage("You need to be an admin to use this command!");
+                }
+                else
+                {
+                    Console.WriteLine("Enter the users email: ");
+                    string email = Console.ReadLine();
+                    Tuple<bool, Staff> result = DB.GetStaffDetails(email);
+                    if (result.Item1 == true)
+                    {
+                        Staff staffDetails = result.Item2;
+                        Console.WriteLine($"{staffDetails.Staff_Forename} {staffDetails.Staff_Surname}'s Details:");
+                        Console.WriteLine("ID: " + staffDetails.Staff_ID);
+                        Console.WriteLine("Password: " + staffDetails.Staff_Password);
+                        Console.WriteLine("Forename: " + staffDetails.Staff_Forename);
+                        Console.WriteLine("Surname: " + staffDetails.Staff_Surname);
+                        Console.WriteLine("Email: " + staffDetails.Staff_Email);
+                        ExitMessage("Phone Number: " + staffDetails.Staff_Phone_Number);
+                    }
+                    else
+                    {
+                        ExitMessage("That user cannot be found!");
+                    }
+                }
+            }
 
+            void SearchCustomerDetailsByEmailShorthand(Database DB, int staff_id, string staff_password, string customer_email)
+            {
+                bool loginResult = DB.Login(staff_id, staff_password).Item1;
+                if (loginResult)
+                {
+                    Tuple<bool, Customer> customerDetailsResult = DB.GetCustomerByEmail(customer_email);
+                    if (!customerDetailsResult.Item1)
+                    {
+                        ExitMessage($"No customer with the email: {customer_email}");
+                    }
+                    else
+                    {
+                        Customer customerDetails = customerDetailsResult.Item2;
+
+                        Console.WriteLine($"{customerDetails.Customer_Forename} {customerDetails.Customer_Surname}'s details: ");
+                        Console.WriteLine("ID: " + customerDetails.Customer_ID);
+                        Console.WriteLine("Forename: " + customerDetails.Customer_Forename);
+                        Console.WriteLine("Surname: " + customerDetails.Customer_Surname);
+                        Console.WriteLine("Email: " + customerDetails.Customer_Email);
+                        Console.WriteLine("Phone Number: " + customerDetails.Customer_Phone_Number);
+
+                        List<RentedCar> customersRentals = new List<RentedCar>(5);
+
+                        Console.WriteLine("Customers Rentals:");
+
+                        if (customersRentals.Count != 0)
+                        {
+                            foreach (var car in customersRentals)
+                            {
+                                Console.WriteLine("Rental Information:");
+                                Console.WriteLine($"Rental ID: {car.Rental_ID} | Rental Start Date: {car.Rental_Start_Date} | Rental End Date: {car.Rental_End_Date} | Rental Price: {car.Rental_Price}");
+                                Console.WriteLine("Car Information:");
+                                Console.WriteLine($"Car ID: {car.Car_ID} | Car Model: {car.Car_Model} | Car Make: {car.Car_Make} | Car VIN: {car.Car_Vin} | Car License Plate: {car.Car_License_Plate} \n");
+                            }
+                            ExitMessage("");
+                        }
+                        else
+                        {
+                            ExitMessage($"{customerDetails.Customer_Forename} {customerDetails.Customer_Surname} doesn't have any rentals on record.");
+                        }
+                    }
+                }
+                else
+                {
+                    ExitMessage("Incorrect Details! ");
+                }
+            }
+
+            void SearchCustomerDetailsByEmail(Database DB, int staff_id, string staff_password, string customer_email)
+            {
+
+            }
 
             void Search(Database DB)
             {
 
             }
 
+            // --- END Searches --- 
+
             void Help()
             {
-                Console.WriteLine(help);
-                Console.WriteLine("Press a key to go back to the menu ->");
-                Console.Read();
+                ExitMessage(help);
             }
 
             // --- Menu Methods --- 
@@ -418,6 +552,16 @@ namespace Program
                         Console.ResetColor();
                     }
                 }
+            }
+
+            void ExitMessage(string message)
+            {
+                if (message != "")
+                {
+                    Console.WriteLine(message);
+                }
+                Console.WriteLine("Press any key to escape...");
+                Console.Read();
             }
 
             // --- END Menu Methods ---
