@@ -72,8 +72,8 @@ namespace ORM
         public string Rental_Start_Date { get { return rental_start_date; } set { rental_start_date = value; } }
         public string Rental_End_Date { get { return rental_end_date; } set { rental_end_date = value; } }
         public float Rental_Price { get { return rental_price; } set { rental_price = value; } }
-        public int Rental_ID { get { return rental_id; } set { rental_id = value; } }
 
+        public int Rental_ID { get { return rental_id; } set { rental_id = value; } }
 
         // --- Constructors --- 
         public RentedCar(int car_id, string car_model, string car_make, string rental_start_date, string rental_end_date)
@@ -96,9 +96,7 @@ namespace ORM
             this.rental_start_date = rental_start_date;
             this.rental_end_date = rental_end_date;
             this.rental_price = rental_price;
-
         }
-
     }
 
     class Staff
@@ -207,4 +205,34 @@ namespace ORM
         // --- End of Constructors
     }
 
+    class Rental
+    {
+        private int rental_id;
+        private int car_id;
+        private int customer_id;
+        private int staff_id;
+        private string rental_start_date;
+        private string rental_end_date;
+        private float rental_cost;
+
+        public int Rental_ID { get { return rental_id; } set { rental_id = value; } }
+        public int Car_ID { get { return car_id; } set { car_id = value; } }
+        public int Customer_ID { get { return customer_id; } set { customer_id = value; } }
+        public int Staff_ID { get { return staff_id; } set { staff_id = value; } }
+        public string Rental_Start_Date { get { return rental_start_date; } set { rental_start_date = value; } }
+        public string Rental_End_Date { get { return rental_end_date; } set { rental_end_date = value; } }
+        public float Rental_Cost { get { return rental_cost; } set { rental_cost = value; } }
+
+        public Rental(int rental_id, int customer_id, int staff_id, string rental_start_date, string rental_end_date, float rental_cost)
+        {
+            this.rental_id = rental_id;
+            this.customer_id = customer_id;
+            this.staff_id = staff_id;
+            this.rental_start_date = rental_start_date;
+            this.rental_end_date = rental_end_date;
+            this.rental_cost = rental_cost;
+        }
+
+        public Rental() { }
+    }
 }

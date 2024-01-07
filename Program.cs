@@ -89,10 +89,29 @@ namespace Program
                     // -search-available | [int] staff_id, [string] staff_password = Used to search for all cars available to rent |  Can be used by any member of staff.
                     else if (args[0] == "-search-available" || args[0] == "-sa") { SearchAvailableShorthand(DB, Convert.ToInt32(args[1]), args[2]); }
 
+                    // -search-staff-details | [int] staff_id, [string] staff_password, [string] staff_email = Used to search for a member of staffs details using their email | Can only be used by an admins
                     else if (args[0] == "-search-staff-details" || args[0] == "-ssd") { SearchStaffDetailsShorthand(DB, Convert.ToInt32(args[1]), args[2], args[3]); }
 
                     // -search - customer - details | [int] staff_id, [string] staff_password, [string] customer_email = Used to search for a customers details | Can be used by any staff
                     else if (args[0] == "-search-customer-details" || args[0] == "-scd") { SearchCustomerDetailsByEmailShorthand(DB, Convert.ToInt32(args[1]), args[2], args[3]); }
+
+                    // -search-car-detail-license | [int] staff_id, [string] staff_password, [string] car_license_plate = Used to search for a cars details with the license plate | Can be used by any member of staff 
+                    else if (args[0] == "-search-car-detail-license" || args[0] == "-scdl") { SearchCarByLicenseShorthand(DB, Convert.ToInt32(args[1]), args[2], args[3]); }
+
+                    // --search-car-detail-vin  | [int] staff_id, [string] staff_password, [string] car_vin = Used to search for a cars details with the VIN number | Can be used by any member of staff
+                    else if (args[0] == "-search-car-details-vin" || args[0] == "scdv") { SearchCarByVinShorthand(DB, Convert.ToInt32(args[1]), args[2], args[3]); }
+
+                    // -search-car-detail-id  | [id] staff_id, [string] staff_password, [int] car_id = Used to search for a cars details with the cars database ID | Can be used by any member of staff
+                    else if (args[0] == "-search-car-details-id" || args[0] == "scdid") { SearchCarByIDShorthand(DB, Convert.ToInt32(args[1]), args[2], Convert.ToInt32(args[3])); }
+
+                    // -add-car | [int] staff_id, [string] staff_password, [string] car_model, [string] car_make, [string] car_vin, [string] car_plate_number = Used to add a new car to the database | Can only be used by admins
+                    else if (args[0] == "-add-car" || args[0] == "-ac") { AddCarShorthand(DB, Convert.ToInt32(args[1]), args[2], Convert.ToInt32(args[3]), args[4], args[5], args[6], args[7], float.Parse(args[8])); }
+
+                    // -remove-car | [int] staff_id, [string] staff_password, [int] car_id = Used to remove a car from the database | Can only be used by admins
+                    else if (args[0] == "-remove-car" || args[0] == "-rc") { RemoveCarShorthand(DB, Convert.ToInt32(args[1]), args[2], Convert.ToInt32(args[3])); }
+                    // -remove-staff | [int] staff_id, [string] staff_password, [int] staff_id = Used to remove a staff member from the database | Can only be used by admins
+                    else if (args[0] == "-remove-staff" || args[0] == "-rs") { RemoveStaffShorthand(DB, Convert.ToInt32(args[1]), args[2], Convert.ToInt32(args[3])); }
+
                     else
                     {
                         ExitMessage($"Invalid Command :{args[0]} | use -help for a list of commands!");
@@ -102,6 +121,21 @@ namespace Program
             catch (IndexOutOfRangeException)
             {
                 Console.WriteLine("Not enough arguments given - staff id or password was supplied"); Help();
+            }
+            catch (FormatException)
+            {
+                Console.WriteLine("Input was in the incorrect format! Format is either a int e.g 1, a string e.g hello or float which is a decimal e.g 3.33");
+            }
+            catch (Microsoft.Data.Sqlite.SqliteException sqliteErr)
+            {
+                if (sqliteErr.Message.Substring(18, 6) == "UNIQUE")
+                {
+                    Console.WriteLine("One of the values you inputted is already in the database, as it needs to be a unique value!");
+                }
+                else
+                {
+                    Console.WriteLine(sqliteErr.Message);
+                }
             }
             catch (Exception err) { Console.WriteLine(err); }
 
@@ -121,8 +155,15 @@ namespace Program
                         { "3", "Search All Rented Cars"},
                         { "4", "Search All Available Cars"},
                         {"5","Search Staff Details (Admin Only)"},
-                        { "6", "Help list"},
-                        { "7", "Quit"}
+                        {"6","Search Customer Details By Email"},
+                        {"7","Search Car Details By Car ID"},
+                        {"8","Search Car Details By License Plate"},
+                        { "9", "Search Car Details By VIN"},
+                        { "10", "Add Car (Admin Only)"},
+                        { "11", "Remove Car (Admin Only)"},
+                        { "12", "Remove Staff (Admin Only)"},
+                        { "13", "Help list"},
+                        { "14", "Quit"}
                     },
                     new List<Action> {
                         // 1
@@ -135,8 +176,23 @@ namespace Program
                         new Action(()=>{ SearchAvailableShorthand(DB,staff_id,staff_password); }),
                         // 5
                         new Action(()=>{ SearchStaffDetails(DB); }),
-
+                        //6
+                        new Action(()=>{ SearchCustomerDetailsByEmail(DB); }),
+                        //  7
+                        new Action(() => { SearchCarByID(DB); }),
+                        // 8
+                        new Action(() => { SearchCarByLicense(DB); }),
+                        // 9
+                        new Action(()=>{SearchCarByVin(DB);}),
+                        // 10
+                        new Action(() => { AddCar(DB); }),
+                         // 11
+                        new Action(() => { RemoveCar(DB); }),
+                        // 12
+                        new Action(() => { RemoveStaff(DB); }),
+                        // 13
                         new Action(() => { Help(); }),
+                        //  14
                         new Action(()=>{ System.Environment.Exit(0); })
                     });
                 }
@@ -309,6 +365,141 @@ namespace Program
 
             // ---  END Rent Car ---
 
+            //  --- Add Car ---
+            void AddCarShorthand(Database DB, int staff_id, string staff_password, int car_id, string car_model, string car_make, string car_vin, string car_license_plate, float car_car_price_per_hour)
+            {
+                Tuple<bool, int, string> login = DB.Login(staff_id, staff_password);
+                if (login.Item1)
+                {
+                    if (DB.IsAdmin(login.Item2, login.Item3))
+                    {
+                        DB.AddCar(car_id, car_model, car_make, car_vin, car_license_plate, car_car_price_per_hour);
+                        ExitMessage("Car Added!");
+                    }
+                    else
+                    {
+                        ExitMessage("You need to be an admin for this!");
+                    }
+                }
+                else
+                {
+                    ExitMessage("Incorrect Details!");
+                }
+            }
+
+            void AddCar(Database DB)
+            {
+                if (DB.IsAdmin(loggedInUser.Item1, loggedInUser.Item2))
+                {
+                    Console.WriteLine("Enter Car Details In:");
+
+                    Console.WriteLine("Car ID: ");
+                    int car_id = Convert.ToInt32(Console.ReadLine());
+
+                    Console.WriteLine("Car Model: ");
+                    string car_model = Console.ReadLine();
+
+                    Console.WriteLine("Car Make: ");
+                    string car_make = Console.ReadLine();
+
+                    Console.WriteLine("Car VIN:");
+                    string car_vin = Console.ReadLine();
+
+                    Console.WriteLine("Car License Plate: ");
+                    string car_license_plate = Console.ReadLine();
+
+                    Console.WriteLine("Car Price Per Hour: ");
+                    float car_car_price_per_hour = float.Parse(Console.ReadLine());
+
+                    DB.AddCar(car_id, car_model, car_make, car_vin, car_license_plate, car_car_price_per_hour);
+                    ExitMessage("Car Added!");
+                }
+                else
+                {
+                    ExitMessage("You need to be an admin for this!");
+                }
+            }
+
+            // --- END Add Car ---
+
+            // -remove-car | [int] staff_id, [string] staff_password, [int] car_id = Used to remove a car from the database | Can only be used by admins
+            // --- Remove Car ---
+            void RemoveCarShorthand(Database DB, int staff_id, string staff_password, int car_id)
+            {
+                Tuple<bool, int, string> login = DB.Login(staff_id, staff_password);
+                if (login.Item1)
+                {
+                    if (DB.IsAdmin(login.Item2, login.Item3))
+                    {
+                        DB.RemoveCar(car_id);
+                        ExitMessage("Car Removed");
+
+                    }
+                    else
+                    {
+                        ExitMessage("You need to be an admin for this!");
+                    }
+                }
+                else
+                {
+                    ExitMessage("Incorrect Details!");
+                }
+            }
+
+            void RemoveCar(Database DB)
+            {
+                Console.WriteLine("Enter the ID of the car you want to remove?");
+                int car_id = Convert.ToInt32(Console.ReadLine());
+                if (DB.IsAdmin(loggedInUser.Item1, loggedInUser.Item2))
+                {
+                    DB.RemoveCar(car_id);
+                    ExitMessage("Car Removed");
+                }
+                else
+                {
+                    ExitMessage("You need to be an admin for this!");
+                }
+            }
+
+            // -remove-staff | [int] staff_id, [string] staff_password, [int] staff_id = Used to remove a staff member from the database | Can only be used by admins
+
+            void RemoveStaffShorthand(Database DB, int staff_id, string staff_password, int staff_id_remove)
+            {
+                Tuple<bool, int, string> login = DB.Login(staff_id, staff_password);
+                if (login.Item1)
+                {
+                    if (DB.IsAdmin(login.Item2, login.Item3))
+                    {
+                        DB.RemoveStaff(staff_id);
+                        ExitMessage("Staff Member Removed!");
+
+                    }
+                    else
+                    {
+                        ExitMessage("You need to be an admin for this!");
+                    }
+                }
+                else
+                {
+                    ExitMessage("Incorrect Details!");
+                }
+            }
+
+            void RemoveStaff(Database DB)
+            {
+                Console.WriteLine("Enter the ID of the staff member you want to remove?");
+                int staff_id = Convert.ToInt32(Console.ReadLine());
+                if (DB.IsAdmin(loggedInUser.Item1, loggedInUser.Item2))
+                {
+                    DB.RemoveCar(staff_id);
+                    ExitMessage("Staff Member Removed");
+                }
+                else
+                {
+                    ExitMessage("You need to be an admin for this!");
+                }
+            }
+
             // --- Searches ---
 
             /// <summary>
@@ -478,17 +669,287 @@ namespace Program
                 }
             }
 
-            void SearchCustomerDetailsByEmail(Database DB, int staff_id, string staff_password, string customer_email)
+            void SearchCustomerDetailsByEmail(Database DB)
             {
+                Console.WriteLine("Enter the customers email");
+                string customer_email = Console.ReadLine();
+                Tuple<bool, Customer> customerDetailsResult = DB.GetCustomerByEmail(customer_email.ToString());
+                if (!customerDetailsResult.Item1)
+                {
+                    ExitMessage($"No customer with the email: {customer_email}");
+                }
+                else
+                {
+                    Customer customerDetails = customerDetailsResult.Item2;
+
+                    Console.WriteLine($"{customerDetails.Customer_Forename} {customerDetails.Customer_Surname}'s details: ");
+                    Console.WriteLine("ID: " + customerDetails.Customer_ID);
+                    Console.WriteLine("Forename: " + customerDetails.Customer_Forename);
+                    Console.WriteLine("Surname: " + customerDetails.Customer_Surname);
+                    Console.WriteLine("Email: " + customerDetails.Customer_Email);
+                    Console.WriteLine("Phone Number: " + customerDetails.Customer_Phone_Number);
+
+                    List<RentedCar> customersRentals = new List<RentedCar>(5);
+
+                    Console.WriteLine("Customers Rentals:");
+
+                    if (customersRentals.Count != 0)
+                    {
+                        foreach (var car in customersRentals)
+                        {
+                            Console.WriteLine("Rental Information:");
+                            Console.WriteLine($"Rental ID: {car.Rental_ID} | Rental Start Date: {car.Rental_Start_Date} | Rental End Date: {car.Rental_End_Date} | Rental Price: {car.Rental_Price}");
+                            Console.WriteLine("Car Information:");
+                            Console.WriteLine($"Car ID: {car.Car_ID} | Car Model: {car.Car_Model} | Car Make: {car.Car_Make} | Car VIN: {car.Car_Vin} | Car License Plate: {car.Car_License_Plate} \n");
+                        }
+                        ExitMessage("");
+                    }
+                    else
+                    {
+                        ExitMessage($"{customerDetails.Customer_Forename} {customerDetails.Customer_Surname} doesn't have any rentals on record.");
+                    }
+                }
+            }
+
+            void SearchCarByLicenseShorthand(Database DB, int staff_id, string staff_password, string car_license_plate)
+            {
+                bool loginResult = DB.Login(staff_id, staff_password).Item1;
+                if (loginResult)
+                {
+                    Tuple<bool, Car> carResult = DB.GetCarByLicensePlate(car_license_plate);
+                    Car carDetails = carResult.Item2;
+                    if (carResult.Item1)
+                    {
+                        Console.WriteLine("Car Details:");
+                        Console.WriteLine("Car ID: " + carDetails.Car_ID);
+                        Console.WriteLine("Car Model: " + carDetails.Car_Model);
+                        Console.WriteLine("Car Make: " + carDetails.Car_Make);
+                        Console.WriteLine("Car VIN: " + carDetails.Car_Vin);
+                        Console.WriteLine("Car License Plate: " + carDetails.Car_License_Plate);
+                        Console.WriteLine("Car Price Per Hour: " + carDetails.Car_Price);
+
+                        List<Rental> rentals = DB.GetRentedCarsByID(carDetails.Car_ID);
+                        Console.WriteLine("\nRental Records With This Car:");
+                        if (rentals.Count != 0)
+                        {
+                            foreach (var rentedCar in rentals)
+                            {
+                                Console.WriteLine($"Rental ID: {rentedCar.Rental_ID} | Customer ID: {rentedCar.Customer_ID} | Staff ID: {rentedCar.Staff_ID} | Rental Period: {rentedCar.Rental_Start_Date} - {rentedCar.Rental_End_Date} | Rental Cost: {rentedCar.Rental_Cost}");
+                            }
+                        }
+                        else
+                        {
+                            ExitMessage("Car doesn't have any rental records");
+                        }
+
+                    }
+                    else
+                    {
+                        ExitMessage("No car with the license plate: " + car_license_plate);
+                    }
+                }
+                else
+                {
+                    ExitMessage("Incorrect Details!");
+                }
+            }
+
+            void SearchCarByLicense(Database DB)
+            {
+                Console.WriteLine("Enter the license plate");
+                string car_license_plate = Console.ReadLine();
+                Tuple<bool, Car> carResult = DB.GetCarByLicensePlate(car_license_plate);
+                Car carDetails = carResult.Item2;
+                if (carResult.Item1)
+                {
+                    Console.WriteLine("Car Details:");
+                    Console.WriteLine("Car ID: " + carDetails.Car_ID);
+                    Console.WriteLine("Car Model: " + carDetails.Car_Model);
+                    Console.WriteLine("Car Make: " + carDetails.Car_Make);
+                    Console.WriteLine("Car VIN: " + carDetails.Car_Vin);
+                    Console.WriteLine("Car License Plate: " + carDetails.Car_License_Plate);
+                    Console.WriteLine("Car Price Per Hour: " + carDetails.Car_Price);
+
+                    List<Rental> rentals = DB.GetRentedCarsByID(carDetails.Car_ID);
+                    Console.WriteLine("\nRental Records With This Car:");
+                    if (rentals.Count != 0)
+                    {
+                        foreach (var rentedCar in rentals)
+                        {
+                            Console.WriteLine($"Rental ID: {rentedCar.Rental_ID} | Customer ID: {rentedCar.Customer_ID} | Staff ID: {rentedCar.Staff_ID} | Rental Period: {rentedCar.Rental_Start_Date} - {rentedCar.Rental_End_Date} | Rental Cost: {rentedCar.Rental_Cost}");
+                        }
+                    }
+                    else
+                    {
+                        ExitMessage("Car doesn't have any rental records");
+                    }
+
+                }
+                else
+                {
+                    ExitMessage("No car with the license plate: " + car_license_plate);
+                }
 
             }
 
-            void Search(Database DB)
+            void SearchCarByVinShorthand(Database DB, int staff_id, string staff_password, string car_vin)
             {
+                bool loginResult = DB.Login(staff_id, staff_password).Item1;
+                if (loginResult)
+                {
+                    Tuple<bool, Car> carResult = DB.GetCarByVIN(car_vin);
+                    Car carDetails = carResult.Item2;
+                    if (carResult.Item1)
+                    {
+                        Console.WriteLine("Car Details:");
+                        Console.WriteLine("Car ID: " + carDetails.Car_ID);
+                        Console.WriteLine("Car Model: " + carDetails.Car_Model);
+                        Console.WriteLine("Car Make: " + carDetails.Car_Make);
+                        Console.WriteLine("Car VIN: " + carDetails.Car_Vin);
+                        Console.WriteLine("Car License Plate: " + carDetails.Car_License_Plate);
+                        Console.WriteLine("Car Price Per Hour: " + carDetails.Car_Price);
 
+                        List<Rental> rentals = DB.GetRentedCarsByID(carDetails.Car_ID);
+                        Console.WriteLine("\nRental Records With This Car:");
+                        if (rentals.Count != 0)
+                        {
+                            foreach (var rentedCar in rentals)
+                            {
+                                Console.WriteLine($"Rental ID: {rentedCar.Rental_ID} | Customer ID: {rentedCar.Customer_ID} | Staff ID: {rentedCar.Staff_ID} | Rental Period: {rentedCar.Rental_Start_Date} - {rentedCar.Rental_End_Date} | Rental Cost: {rentedCar.Rental_Cost}");
+                            }
+                        }
+                        else
+                        {
+                            ExitMessage("Car doesn't have any rental records");
+                        }
+                    }
+                    else
+                    {
+                        ExitMessage("No car with the license plate: " + car_vin);
+                    }
+                }
+                else
+                {
+                    ExitMessage("Incorrect Details!");
+                }
             }
 
+            void SearchCarByVin(Database DB)
+            {
+                Console.WriteLine("Enter the cars VIN");
+                string car_vin = Console.ReadLine();
+                Tuple<bool, Car> carResult = DB.GetCarByVIN(car_vin);
+                Car carDetails = carResult.Item2;
+                if (carResult.Item1)
+                {
+                    Console.WriteLine("Car Details:");
+                    Console.WriteLine("Car ID: " + carDetails.Car_ID);
+                    Console.WriteLine("Car Model: " + carDetails.Car_Model);
+                    Console.WriteLine("Car Make: " + carDetails.Car_Make);
+                    Console.WriteLine("Car VIN: " + carDetails.Car_Vin);
+                    Console.WriteLine("Car License Plate: " + carDetails.Car_License_Plate);
+                    Console.WriteLine("Car Price Per Hour: " + carDetails.Car_Price);
+
+                    List<Rental> rentals = DB.GetRentedCarsByID(carDetails.Car_ID);
+                    Console.WriteLine("\nRental Records With This Car:");
+                    if (rentals.Count != 0)
+                    {
+                        foreach (var rentedCar in rentals)
+                        {
+                            Console.WriteLine($"Rental ID: {rentedCar.Rental_ID} | Customer ID: {rentedCar.Customer_ID} | Staff ID: {rentedCar.Staff_ID} | Rental Period: {rentedCar.Rental_Start_Date} - {rentedCar.Rental_End_Date} | Rental Cost: {rentedCar.Rental_Cost}");
+                        }
+                    }
+                    else
+                    {
+                        ExitMessage("Car doesn't have any rental records");
+                    }
+                }
+                else
+                {
+                    ExitMessage("No car with the license plate: " + car_vin);
+                }
+            }
+
+            void SearchCarByIDShorthand(Database DB, int staff_id, string staff_password, int car_id)
+            {
+                bool loginResult = DB.Login(staff_id, staff_password).Item1;
+                if (loginResult)
+                {
+                    Tuple<bool, Car> carResult = DB.GetCarByID(car_id);
+                    Car carDetails = carResult.Item2;
+                    if (carResult.Item1)
+                    {
+                        Console.WriteLine("Car Details:");
+                        Console.WriteLine("Car ID: " + carDetails.Car_ID);
+                        Console.WriteLine("Car Model: " + carDetails.Car_Model);
+                        Console.WriteLine("Car Make: " + carDetails.Car_Make);
+                        Console.WriteLine("Car VIN: " + carDetails.Car_Vin);
+                        Console.WriteLine("Car License Plate: " + carDetails.Car_License_Plate);
+                        Console.WriteLine("Car Price Per Hour: " + carDetails.Car_Price);
+
+                        List<Rental> rentals = DB.GetRentedCarsByID(carDetails.Car_ID);
+                        Console.WriteLine("\nRental Records With This Car:");
+                        if (rentals.Count != 0)
+                        {
+                            foreach (var rentedCar in rentals)
+                            {
+                                Console.WriteLine($"Rental ID: {rentedCar.Rental_ID} | Customer ID: {rentedCar.Customer_ID} | Staff ID: {rentedCar.Staff_ID} | Rental Period: {rentedCar.Rental_Start_Date} - {rentedCar.Rental_End_Date} | Rental Cost: {rentedCar.Rental_Cost}");
+                            }
+                        }
+                        else
+                        {
+                            ExitMessage("Car doesn't have any rental records");
+                        }
+                    }
+                    else
+                    {
+                        ExitMessage("No car with the license plate: " + car_id);
+                    }
+                }
+                else
+                {
+                    ExitMessage("Incorrect Details!");
+                }
+            }
+
+            void SearchCarByID(Database DB)
+            {
+                Console.WriteLine("Enter the car ID: ");
+                int car_id = Convert.ToInt32(Console.ReadLine());
+                Tuple<bool, Car> carResult = DB.GetCarByID(car_id);
+                Car carDetails = carResult.Item2;
+                if (carResult.Item1)
+                {
+                    Console.WriteLine("Car Details:");
+                    Console.WriteLine("Car ID: " + carDetails.Car_ID);
+                    Console.WriteLine("Car Model: " + carDetails.Car_Model);
+                    Console.WriteLine("Car Make: " + carDetails.Car_Make);
+                    Console.WriteLine("Car VIN: " + carDetails.Car_Vin);
+                    Console.WriteLine("Car License Plate: " + carDetails.Car_License_Plate);
+                    Console.WriteLine("Car Price Per Hour: " + carDetails.Car_Price);
+
+                    List<Rental> rentals = DB.GetRentedCarsByID(carDetails.Car_ID);
+                    Console.WriteLine("\nRental Records With This Car:");
+                    if (rentals.Count != 0)
+                    {
+                        foreach (var rentedCar in rentals)
+                        {
+                            Console.WriteLine($"Rental ID: {rentedCar.Rental_ID} | Customer ID: {rentedCar.Customer_ID} | Staff ID: {rentedCar.Staff_ID} | Rental Period: {rentedCar.Rental_Start_Date} - {rentedCar.Rental_End_Date} | Rental Cost: {rentedCar.Rental_Cost}");
+                        }
+                    }
+                    else
+                    {
+                        ExitMessage("Car doesn't have any rental records");
+                    }
+                }
+                else
+                {
+                    ExitMessage("No car with the license plate: " + car_id);
+                }
+            }
             // --- END Searches --- 
+
+
 
             void Help()
             {

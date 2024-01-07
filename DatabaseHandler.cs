@@ -105,6 +105,51 @@ namespace DatabaseHandler
             return true;
         }
 
+        public void AddCar(int car_id, string car_model, string car_make, string car_vin, string car_license_plate, float car_price_per_hour)
+        {
+            using (var connection = new SqliteConnection(database))
+            {
+                connection.Open();
+                var command = connection.CreateCommand();
+                command.CommandText = "INSERT INTO Cars(car_id,car_model,car_make,car_vin,car_license_plate,car_price_per_hour) VALUES(@car_id,@car_model,@car_make,@car_vin,@car_license_plate,@car_price_per_hour)";
+                command.Parameters.AddWithValue("@car_id", car_id);
+                command.Parameters.AddWithValue("@car_model", car_model);
+                command.Parameters.AddWithValue("@car_make", car_make);
+                command.Parameters.AddWithValue("@car_vin", car_vin);
+                command.Parameters.AddWithValue("@car_license_plate", car_license_plate);
+                command.Parameters.AddWithValue("@car_price_per_hour", Math.Round(car_price_per_hour, 2));
+                command.Prepare();
+                command.ExecuteNonQuery();
+                connection.Close();
+            }
+        }
+
+        public void RemoveCar(int car_id)
+        {
+            using (var connection = new SqliteConnection(database))
+            {
+                connection.Open();
+                var command = connection.CreateCommand();
+                command.CommandText = $"DELETE FROM Cars WHERE car_id={car_id};";
+                command.Prepare();
+                command.ExecuteNonQuery();
+                connection.Close();
+            }
+        }
+
+        public void RemoveStaff(int staff_id)
+        {
+            using (var connection = new SqliteConnection(database))
+            {
+                connection.Open();
+                var command = connection.CreateCommand();
+                command.CommandText = $"DELETE FROM Staff WHERE car_id={staff_id};";
+                command.Prepare();
+                command.ExecuteNonQuery();
+                connection.Close();
+            }
+        }
+
         // --- GET Cars ---
 
         /// <summary>
@@ -122,9 +167,9 @@ namespace DatabaseHandler
         /// </item>
         /// </list>
         /// </summary>
-        public Tuple<bool, List<Car>> GetCarByID(int car_id)
+        public Tuple<bool, Car> GetCarByID(int car_id)
         {
-            List<Car> cars = new List<Car>();
+            Car car = new Car();
             using (var connection = new SqliteConnection(database))
             {
                 connection.Open();
@@ -133,16 +178,16 @@ namespace DatabaseHandler
                 SqliteDataReader reader = command.ExecuteReader();
                 while (reader.Read())
                 {
-                    cars.Add(new Car(Convert.ToInt32(reader["car_id"].ToString()), reader["car_make"].ToString(), reader["car_model"].ToString(), reader["car_vin"].ToString(), reader["car_license_plate"].ToString(), float.Parse(reader["car_price_per_hour"].ToString())));
+                    car = new Car(Convert.ToInt32(reader["car_id"].ToString()), reader["car_make"].ToString(), reader["car_model"].ToString(), reader["car_vin"].ToString(), reader["car_license_plate"].ToString(), float.Parse(reader["car_price_per_hour"].ToString()));
                 }
                 connection.Close();
 
             }
-            if (cars.Count() == 0)
+            if (car.Car_Model == "")
             {
-                return Tuple.Create(false, cars);
+                return Tuple.Create(false, car);
             }
-            return Tuple.Create(true, cars);
+            return Tuple.Create(true, car);
         }
 
         /// <summary>
@@ -160,27 +205,27 @@ namespace DatabaseHandler
         /// </item>
         /// </list>
         /// </summary>
-        public Tuple<bool, List<Car>> GetCarByVIN(string car_vin)
+        public Tuple<bool, Car> GetCarByVIN(string car_vin)
         {
-            List<Car> cars = new List<Car>();
+            Car car = new Car();
             using (var connection = new SqliteConnection(database))
             {
                 connection.Open();
                 var command = connection.CreateCommand();
-                command.CommandText = "SELECT * FROM Cars WHERE car_vin= " + car_vin;
+                command.CommandText = $"SELECT * FROM Cars WHERE car_vin= '{car_vin}'";
                 SqliteDataReader reader = command.ExecuteReader();
                 while (reader.Read())
                 {
-                    cars.Add(new Car(Convert.ToInt32(reader["car_id"].ToString()), reader["car_make"].ToString(), reader["car_model"].ToString(), reader["car_vin"].ToString(), reader["car_license_plate"].ToString(), float.Parse(reader["car_price_per_hour"].ToString())));
+                    car = new Car(Convert.ToInt32(reader["car_id"].ToString()), reader["car_make"].ToString(), reader["car_model"].ToString(), reader["car_vin"].ToString(), reader["car_license_plate"].ToString(), float.Parse(reader["car_price_per_hour"].ToString()));
                 }
                 connection.Close();
 
             }
-            if (cars.Count() == 0)
+            if (car.Car_Model == "")
             {
-                return Tuple.Create(false, cars);
+                return Tuple.Create(false, car);
             }
-            return Tuple.Create(true, cars);
+            return Tuple.Create(true, car);
         }
 
         /// <summary>
@@ -205,7 +250,7 @@ namespace DatabaseHandler
             {
                 connection.Open();
                 var command = connection.CreateCommand();
-                command.CommandText = "SELECT * FROM Cars WHERE car_license_plate= " + car_license_plate;
+                command.CommandText = $"SELECT * FROM Cars WHERE Cars.car_license_plate = '{car_license_plate}'";
                 SqliteDataReader reader = command.ExecuteReader();
                 while (reader.Read())
                 {
@@ -346,6 +391,30 @@ namespace DatabaseHandler
 
             }
             return availableCars;
+        }
+
+        public List<Rental> GetRentedCarsByID(int car_id)
+        {
+            List<Rental> rentedCars = new List<Rental>(5);
+            using (var connection = new SqliteConnection(database))
+            {
+                connection.Open();
+                var command = connection.CreateCommand();
+                command.CommandText = "SELECT * FROM Rentals WHERE car_id=" + car_id + ";";
+                SqliteDataReader reader = command.ExecuteReader();
+                while (reader.Read())
+                {
+                    rentedCars.Add(new Rental(
+                        Convert.ToInt32(reader["rental_id"].ToString()),
+                        Convert.ToInt32(reader["customer_id"].ToString()),
+                        Convert.ToInt32(reader["staff_id"].ToString()),
+                        reader["rental_start_date"].ToString(),
+                        reader["rental_end_date"].ToString(),
+                        float.Parse(reader["rental_cost"].ToString())
+                        ));
+                }
+            }
+            return rentedCars;
         }
 
         // --- END GET Cars ---
