@@ -190,12 +190,6 @@ namespace DatabaseHandler
             return Tuple.Create(true, car);
         }
 
-        /// <summary>
-        /// Get a cars details by it's VIN number
-        /// <param name="car_vin"></param>
-        /// <para>Returns: Tuple</para>
-        /// <list type="bullet">
-        /// <item>
         /// <term>bool</term>
         /// <description>Returns true if the car was found, returns false if the car wasn't found</description>
         /// </item>

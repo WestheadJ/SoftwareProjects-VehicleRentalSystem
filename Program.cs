@@ -10,14 +10,12 @@ namespace Program
         {
             string help = @"HELP MENU:
     Command Formatting:
-        vrs -command | [type] args 
+        vrs -command | [type] args (disclaimer not commas are used and all spaces count as an argument so use as : -login 0 000000)
 
     Commands:
         -help = help commands
 
         - help-admin = help commands for admins
-
-        -version = version
 
         -login |[int] staff_id, [string] staff_password = Used for running multiple commands using an interface | Can be used by any member of staff.
 
@@ -47,7 +45,6 @@ namespace Program
 
     Shorthands:
         -h = help 
-        -v = version
         -l = login
         -r = register
         -rcn = rent-car-new
@@ -63,8 +60,6 @@ namespace Program
         -rs = remove-staff";
 
             Tuple<int, string> loggedInUser;
-
-            Dictionary<int, Car> availableCars = new Dictionary<int, Car>();
 
             try
             {
@@ -120,27 +115,30 @@ namespace Program
             }
             catch (IndexOutOfRangeException)
             {
-                Console.WriteLine("Not enough arguments given - staff id or password was supplied"); Help();
+                Console.WriteLine("IndexOutOfRange: Not enough arguments given");
+                Help();
             }
             catch (FormatException)
             {
-                Console.WriteLine("Input was in the incorrect format! Format is either a int e.g 1, a string e.g hello or float which is a decimal e.g 3.33");
+                ExitMessage("FormatException: Input was in the incorrect format! Format is either a int e.g 1, a string e.g hello or float which is a decimal e.g 3.33");
             }
             catch (Microsoft.Data.Sqlite.SqliteException sqliteErr)
             {
                 if (sqliteErr.Message.Substring(18, 6) == "UNIQUE")
                 {
-                    Console.WriteLine("One of the values you inputted is already in the database, as it needs to be a unique value!");
+                    ExitMessage("One of the values you inputted is already in the database, as it needs to be a unique value!");
                 }
                 else
                 {
-                    Console.WriteLine(sqliteErr.Message);
+                    Console.WriteLine("Uncaught SQLITE ERROR!");
+                    ExitMessage(sqliteErr.Message);
                 }
             }
             catch (Exception err) { Console.WriteLine(err); }
 
 
             // --- Login ---
+
 
             void Login(Database DB, int staff_id, string staff_password)
             {
@@ -502,12 +500,7 @@ namespace Program
 
             // --- Searches ---
 
-            /// <summary>
-            /// Searches for all cars being rented
-            /// </summary>
-            /// <param name="DB">The database instance.</param>
-            /// <param name="staff_id">The staff ID for authentication.</param>
-            /// <param name="staff_password">The staff password for authentication.</param>
+            // --- Search Rented Cars ---
             void SearchRentedShorthand(Database DB, int staff_id, string staff_password)
             {
                 Tuple<bool, int, string> login = DB.Login(staff_id, staff_password);
@@ -529,12 +522,6 @@ namespace Program
                 Console.Read();
             }
 
-            /// <summary>
-            /// Searches for available cars in the database and prints their details.
-            /// </summary>
-            /// <param name="DB">The database instance.</param>
-            /// <param name="staff_id">The staff ID for authentication.</param>
-            /// <param name="staff_password">The staff password for authentication.</param>
             void SearchAvailableShorthand(Database DB, int staff_id, string staff_password)
             {
                 Tuple<bool, int, string> login = DB.Login(staff_id, staff_password);
@@ -948,8 +935,6 @@ namespace Program
                 }
             }
             // --- END Searches --- 
-
-
 
             void Help()
             {
